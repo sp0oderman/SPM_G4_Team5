@@ -82,6 +82,27 @@ def get_all():
     ), 404
 
 
+@app.route("/wfh_requests/<int:request_id_num>")
+def find_by_request_id(request_id_num):
+    wfh_request = db.session.scalars(
+    	db.select(wfh_requests).filter_by(request_id=request_id_num)
+        ).first()
+
+    if wfh_request:
+        return jsonify(
+            
+            {
+                "code": 200,
+                "data": wfh_request.json()
+            }
+        )
+    return jsonify(
+        {
+            "code": 404,
+            "message": "Work-from-home request with that ID number is not found."
+        }
+    ), 404
+
 @app.route("/wfh_requests/<int:staff_id_num>")
 def find_by_staff_id(staff_id_num):
     staff_requests_list = db.session.scalars(
@@ -102,7 +123,7 @@ def find_by_staff_id(staff_id_num):
     return jsonify(
         {
             "code": 404,
-            "message": "Employee not found."
+            "message": "Employee with that ID number is not found."
         }
     ), 404
 
@@ -119,7 +140,7 @@ def find_by_team(reporting_manager_id_num):
         return jsonify(
             {
                 "code": 404,
-                "message": "Team manager not found."
+                "message": "Team manager with that ID number is not found."
             }
         ), 404
 
@@ -147,7 +168,6 @@ def find_by_team(reporting_manager_id_num):
 @app.route("/wfh_requests/apply", methods=['POST'])
 def insertWfhApplication():
     # Check if application contains valid JSON
-
     application_details = None
     if request.is_json:
         application_details = request.get_json()
@@ -162,9 +182,7 @@ def insertWfhApplication():
                         "data": str(data),
                         "message": "Application details should be in JSON."}), 400  # Bad Request input
 
-
 def processApplicationDetails(application_details):
-
     print("Processing work-from-home application details:")
     print(application_details)
     staff_id = application_details["staff_id"]
@@ -190,6 +208,41 @@ def processApplicationDetails(application_details):
                 "message": "An error occurred inserting the work-from-home application record.",
                 "error": str(e)
                 }
+    return  {
+            "code": 201,
+            "message": "Work-from-home application successfully inserted.",
+            "data": wfh_request.json(),
+            }
+
+# As of now this deletes ANY wfh_request no matter the status
+@app.route("/wfh_requests/withdraw/<int:request_id>", methods=['DELETE'])
+def deleteWfhRequest(request_id):    
+    try:    
+        # Find the work-from-home request by request_id
+        wfh_request = wfh_requests.query.get(request_id)
+
+        if not wfh_request:
+            return {
+                "code": 404,
+                "message": f"Work-from-home request with ID number:{request_id} not found."
+            }, 404
+
+        # Delete the request from the database
+        db.session.delete(wfh_request)
+        db.session.commit()
+
+        return {
+            "code": 200,
+            "message": f"Work-from-home request with ID number:{request_id} successfully deleted."
+        }, 200
+
+    except Exception as e:
+        db.session.rollback()  # Rollback in case of an error
+        return {
+            "code": 500,
+            "message": "An error occurred while deleting the work-from-home request.",
+            "error": str(e)
+        }, 500
 
     return  {
             "code": 201,
