@@ -208,7 +208,6 @@ def processApplicationDetails(application_details):
                 "message": "An error occurred inserting the work-from-home application record.",
                 "error": str(e)
                 }
-
     return  {
             "code": 201,
             "message": "Work-from-home application successfully inserted.",
@@ -244,6 +243,12 @@ def deleteWfhRequest(request_id):
             "message": "An error occurred while deleting the work-from-home request.",
             "error": str(e)
         }, 500
+
+    return  {
+            "code": 201,
+            "message": "Work-from-home application successfully inserted.",
+            "data": wfh_request.json(),
+            }
 
 if __name__ == '__main__':
     app.run(port=5100, debug=True)
