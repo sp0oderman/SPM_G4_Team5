@@ -25,18 +25,20 @@ class wfh_requests(db.Model):
     __tablename__ = 'wfh_request'
 
     request_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    staff_id = db.Column(db.Integer, primary_key=True)
-    reporting_manager = db.Column(db.Integer, nullable=True)
+    staff_id = db.Column(db.Integer)
+    reporting_manager = db.Column(db.Integer, nullable=False)
     dept = db.Column(db.String(50), nullable=False)
+    chosen_date = db.Column(db.String(50), nullable=False)
     arrangement_type = db.Column(db.String(20), nullable=False)
     request_datetime = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), nullable=False)
     remarks = db.Column(db.String(500), nullable=True)
 
-    def __init__(self, staff_id, reporting_manager, dept, arrangement_type, request_datetime, status, remarks):
+    def __init__(self, staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks):
         self.staff_id = staff_id
         self.reporting_manager = reporting_manager
         self.dept = dept
+        self.chosen_date = chosen_date
         self.arrangement_type = arrangement_type
         self.request_datetime = request_datetime
         self.status = status
@@ -48,6 +50,7 @@ class wfh_requests(db.Model):
                 "staff_id": self.staff_id,
                 "reporting_manager": self.reporting_manager,
                 "dept": self.dept,
+                "chosen_date": self.chosen_date,
                 "arrangement_type": self.arrangement_type,
                 "request_datetime": self.request_datetime,
                 "status": self.status,
@@ -167,29 +170,30 @@ def processApplicationDetails(application_details):
     staff_id = application_details["staff_id"]
     reporting_manager = application_details['reporting_manager']
     dept = application_details['dept']
+    chosen_date = application_details['chosen_date']
     arrangement_type = application_details['arrangement_type']
     request_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     request_status = "Pending"
     remarks = ""
-
     print()  # print a new line feed as a separator
 
-    wfh_request = wfh_requests(staff_id, reporting_manager, dept, arrangement_type, request_datetime, request_status, remarks)
+    wfh_request = wfh_requests(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, request_status, remarks)
 
     try:
         db.session.add(wfh_request)
         db.session.commit()
-        
-    except:
+
+    except Exception as e:
         return  {
                 "code": 500,
                 "data": request.get_json(),
-                "message": "An error occurred logging the work-from-home application."
+                "message": "An error occurred inserting the work-from-home application record.",
+                "error": str(e)
                 }
 
     return  {
             "code": 201,
-            "message": "Work-from-home application successfully logged.",
+            "message": "Work-from-home application successfully inserted.",
             "data": wfh_request.json(),
             }
 
