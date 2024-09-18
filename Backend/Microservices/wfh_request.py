@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import os
 from sqlalchemy import BigInteger, or_
 
+from datetime import datetime
+
 load_dotenv()
 
 postgres_user = os.getenv('POSTGRES_USER')
@@ -26,19 +28,15 @@ class wfh_requests(db.Model):
     staff_id = db.Column(db.Integer, primary_key=True)
     reporting_manager = db.Column(db.Integer, nullable=True)
     dept = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(50), nullable=False)
     arrangement_type = db.Column(db.String(20), nullable=False)
     request_datetime = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), nullable=False)
     remarks = db.Column(db.String(500), nullable=True)
 
-
-    def __init__(self, request_id, staff_id, reporting_manager, dept, email, arrangement_type, request_datetime, status, remarks):
-        self.request_id - request_id
+    def __init__(self, staff_id, reporting_manager, dept, arrangement_type, request_datetime, status, remarks):
         self.staff_id = staff_id
         self.reporting_manager = reporting_manager
         self.dept = dept
-        self.email = email
         self.arrangement_type = arrangement_type
         self.request_datetime = request_datetime
         self.status = status
@@ -50,7 +48,6 @@ class wfh_requests(db.Model):
                 "staff_id": self.staff_id,
                 "reporting_manager": self.reporting_manager,
                 "dept": self.dept,
-                "email": self.email,
                 "arrangement_type": self.arrangement_type,
                 "request_datetime": self.request_datetime,
                 "status": self.status,
@@ -65,7 +62,7 @@ def homepage():
 def get_all():
     wfh_requests_list = db.session.scalars(db.select(wfh_requests)).all()
 
-    if len(wfh_requests):
+    if len(wfh_requests_list):
         return jsonify(
             {
                 "code": 200,
@@ -107,7 +104,7 @@ def find_by_staff_id(staff_id_num):
     ), 404
 
 
-@app.route("/requests/team/<int:reporting_manager_id_num>")
+@app.route("/wfh_requests/team/<int:reporting_manager_id_num>")
 def find_by_team(reporting_manager_id_num):
 
     team_manager = db.session.scalars(
@@ -144,47 +141,57 @@ def find_by_team(reporting_manager_id_num):
         }
     ), 404
 
+@app.route("/wfh_requests/apply", methods=['POST'])
+def insertWfhApplication():
+    # Check if application contains valid JSON
 
-# @app.route("/requests/create/<string:id_num>/", methods=['POST'])
-# def create_user_account(id_num):
-#     if (db.session.scalars(
-#       db.select(user_accounts).filter_by(bank_acct_id=id_num).
-#       limit(1)
-#       ).first()
-#       ):
-#         return jsonify(
-#             {
-#                 "code": 400,
-#                 "data": {
-#                     "bank_acct_id": id_num
-#                 },
-#                 "message": "Account already exists."
-#             }
-#         ), 400
+    application_details = None
+    if request.is_json:
+        application_details = request.get_json()
+        result = processApplicationDetails(application_details)
+        return result, result["code"]
+    else:
+        data = request.get_data()
+        print("Received invalid application details:")
+        print(data)
+        return jsonify({"code": 400,
+                        # make the data string as we dunno what could be the actual format
+                        "data": str(data),
+                        "message": "Application details should be in JSON."}), 400  # Bad Request input
 
-#     data = request.get_json()
-#     account = user_accounts(id_num, **data)
 
-#     try:
-#         db.session.add(account)
-#         db.session.commit()
-#     except:
-#         return jsonify(
-#             {
-#                 "code": 500,
-#                 "data": {
-#                     "bank_acct_id": id_num
-#                 },
-#                 "message": "An error occurred creating the account."
-#             }
-#         ), 500
+def processApplicationDetails(application_details):
 
-#     return jsonify(
-#         {
-#             "code": 201,
-#             "data": account.json()
-#         }
-#     ), 201
+    print("Processing work-from-home application details:")
+    print(application_details)
+    staff_id = application_details["staff_id"]
+    reporting_manager = application_details['reporting_manager']
+    dept = application_details['dept']
+    arrangement_type = application_details['arrangement_type']
+    request_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    request_status = "Pending"
+    remarks = ""
+
+    print()  # print a new line feed as a separator
+
+    wfh_request = wfh_requests(staff_id, reporting_manager, dept, arrangement_type, request_datetime, request_status, remarks)
+
+    try:
+        db.session.add(wfh_request)
+        db.session.commit()
+        
+    except:
+        return  {
+                "code": 500,
+                "data": request.get_json(),
+                "message": "An error occurred logging the work-from-home application."
+                }
+
+    return  {
+            "code": 201,
+            "message": "Work-from-home application successfully logged.",
+            "data": wfh_request.json(),
+            }
 
 if __name__ == '__main__':
     app.run(port=5100, debug=True)
