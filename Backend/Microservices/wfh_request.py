@@ -162,7 +162,6 @@ def find_by_team(dept_name, reporting_manager_id_num):
             {
                 "code": 200,
                 "data": {
-                    "department": dept_name,
                     "team_requests": [wfh_request.json() for wfh_request in team_requests_list]
                 }
             }
