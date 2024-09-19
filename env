@@ -1,9 +1,0 @@
-# Configure PostgreSQL database URI
-# PostgreSQL URI format: postgresql://username:password@host:port/database_name
-# Below is the URI from Supabase (cloud hosted PostgreSQL DB)
-# postgresql://postgres.gorqxuokorfqjuxckskl:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
-
-POSTGRES_USER = postgres.gorqxuokorfqjuxckskl
-POSTGRES_PASSWORD = yO4Ul9imsnZA3h7E
-POSTGRES_HOST = aws-0-ap-southeast-1.pooler.supabase.com
-POSTGRES_DB = postgres
