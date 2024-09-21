@@ -136,6 +136,42 @@ def approve_wfh_request():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/reject_wfh_request', methods=['POST'])
+def reject_wfh_request():
+    """
+    Manager rejects a WFH request with a reason, ensuring that the rejection reason is non-empty.
+    """
+    try:
+        data = request.json
+        request_id = data.get('request_id')
+        manager_username = data.get('manager_username')
+        rejection_reason = data.get('rejection_reason')
+
+        # Validate that request ID, manager username, and rejection reason are provided
+        if not request_id or not manager_username or not rejection_reason:
+            return jsonify({"error": "Request ID, Manager username, and rejection reason are required"}), 400
+
+        if len(rejection_reason.strip()) == 0:
+            return jsonify({"error": "Rejection reason cannot be empty"}), 400
+
+        # Retrieve the WFH request by ID
+        wfh_request = WFHRequest.query.filter_by(id=request_id, status='Pending').first()
+        if not wfh_request:
+            return jsonify({"error": "No pending WFH request found"}), 404
+
+        # Reject the WFH request and store the rejection reason
+        wfh_request.status = 'Rejected'
+        wfh_request.reason = rejection_reason
+        db.session.commit()
+
+        # Notify the staff member (mock function)
+        notify_staff_member(wfh_request.username, wfh_request.requested_dates, "Rejected", rejection_reason)
+
+        return jsonify({"message": "WFH request rejected successfully!"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Helper functions (mock implementations)
 
@@ -148,8 +184,8 @@ def get_team_wfh_count(team, requested_dates):
 def get_total_team_members(team):
     return 10
 
-def notify_staff_member(username, requested_dates, status):
-    print(f"Notified {username} that their WFH request for {requested_dates} was {status}.")
+def notify_staff_member(username, requested_dates, status, reason=""):
+     print(f"Notified {username} that their WFH request for {requested_dates} was {status}. Reason: {reason}")
 
 # Health check route
 @app.route('/health', methods=['GET'])
