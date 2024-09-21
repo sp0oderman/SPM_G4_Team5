@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import psycopg2
 from dotenv import load_dotenv
 import os
-from sqlalchemy import BigInteger, or_
+from sqlalchemy import BigInteger, or_, and_
 
 from datetime import datetime
 
@@ -51,6 +51,7 @@ class wfh_requests(db.Model):
                 "reporting_manager": self.reporting_manager,
                 "dept": self.dept,
                 "chosen_date": self.chosen_date,
+                "chosen_date": self.chosen_date,
                 "arrangement_type": self.arrangement_type,
                 "request_datetime": self.request_datetime,
                 "status": self.status,
@@ -80,6 +81,7 @@ def get_all():
             "message": "There are no work-from-home requests."
         }
     ), 404
+
 
 
 @app.route("/wfh_requests/<int:request_id_num>")
@@ -128,42 +130,51 @@ def find_by_staff_id(staff_id_num):
     ), 404
 
 
-@app.route("/wfh_requests/team/<int:reporting_manager_id_num>")
-def find_by_team(reporting_manager_id_num):
+@app.route("/wfh_requests/team/<string:dept_name>/<int:reporting_manager_id_num>")
+def find_by_team(dept_name, reporting_manager_id_num):
 
-    team_manager = db.session.scalars(
-    	db.select(wfh_requests).filter_by(staff_id=reporting_manager_id_num).
-    	limit(1)
-        ).first()
-    
-    if not team_manager:
+    # Check if department exists
+    dept_exists = db.session.query(
+        db.session.query(wfh_requests).filter_by(dept=dept_name).exists()
+    ).scalar()
+
+    if not dept_exists:
         return jsonify(
             {
                 "code": 404,
-                "message": "Team manager with that ID number is not found."
+                "message": f"Department with name:{dept_name} is not found."
             }
         ), 404
 
+    # Get all requests for the given team (department and reporting manager)
     team_requests_list = db.session.scalars(
-    	db.select(wfh_requests).filter_by(reporting_manager=reporting_manager_id_num)
-        ).all()
+        db.select(wfh_requests).filter(
+            and_(
+                wfh_requests.reporting_manager == reporting_manager_id_num,
+                wfh_requests.dept == dept_name
+            )
+        )
+    ).all()
 
-    if len(team_requests_list):
+    # If there are requests, return them
+    if len(team_requests_list) > 0:
         return jsonify(
             {
                 "code": 200,
                 "data": {
-                    "team_manager": team_manager,
                     "team_requests": [wfh_request.json() for wfh_request in team_requests_list]
                 }
             }
         )
+    
+    # If no requests found
     return jsonify(
         {
             "code": 404,
-            "message": "No requests from this team."
+            "message": "No requests from this team or team manager is not found."
         }
     ), 404
+
 
 @app.route("/wfh_requests/apply", methods=['POST'])
 def insertWfhApplication():
@@ -243,12 +254,6 @@ def deleteWfhRequest(request_id):
             "message": "An error occurred while deleting the work-from-home request.",
             "error": str(e)
         }, 500
-
-    return  {
-            "code": 201,
-            "message": "Work-from-home application successfully inserted.",
-            "data": wfh_request.json(),
-            }
-
+    
 if __name__ == '__main__':
     app.run(port=5100, debug=True)

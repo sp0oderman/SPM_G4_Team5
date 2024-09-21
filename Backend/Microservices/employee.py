@@ -4,6 +4,8 @@ import psycopg2
 from dotenv import load_dotenv
 import os
 
+from sqlalchemy import or_, and_
+
 load_dotenv()
 
 postgres_user = os.getenv('POSTGRES_USER')
@@ -106,9 +108,22 @@ def find_by_staff_id(staff_id_num):
     ), 404
 
 
-@app.route("/employees/team/<int:reporting_manager_id_num>")
-def find_by_team(reporting_manager_id_num):
+@app.route("/employees/team/<string:dept_name>/<int:reporting_manager_id_num>")
+def find_by_team(dept_name, reporting_manager_id_num):
     
+    # Check if department exists
+    dept_exists = db.session.query(
+        db.session.query(employees).filter_by(dept=dept_name).exists()
+    ).scalar()
+
+    if not dept_exists:
+        return jsonify(
+            {
+                "code": 404,
+                "message": f"Department with name:{dept_name} is not found."
+            }
+        ), 404
+
     team_manager = db.session.scalars(
     	db.select(employees).filter_by(staff_id=reporting_manager_id_num).
     	limit(1)
@@ -123,14 +138,21 @@ def find_by_team(reporting_manager_id_num):
         ), 404
     
     team_list = db.session.scalars(
-    	db.select(employees).filter_by(reporting_manager=reporting_manager_id_num)).all()
+    	db.select(employees).filter(
+            and_(
+                employees.reporting_manager == reporting_manager_id_num,
+                employees.dept == dept_name
+            )
+        )
+    ).all()
 
-    if len(team_list):
+    if len(team_list) > 0:
         return jsonify(
             {
                 "code": 200,
                 "data": {
-                    "team_manager": team_manager,
+                    # when the json returns, the team_manager data is all the way at the bottom
+                    "team_manager": team_manager.json(),
                     "team_list": [employee.json() for employee in team_list]
                 }
             }
@@ -139,7 +161,7 @@ def find_by_team(reporting_manager_id_num):
     return jsonify(
         {
             "code": 404,
-            "message": "Manager does not have a team."
+            "message": f"Staff ID provided:{reporting_manager_id_num} does not have a team."
         }
     ), 404
 
