@@ -61,7 +61,8 @@ def apply_wfh():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+# Helper function to check if user can apply for WFH
 def can_apply_wfh(username, requested_dates):
     """
     Mock function to check WFH limits and conflicts.
