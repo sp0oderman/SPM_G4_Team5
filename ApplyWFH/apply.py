@@ -6,6 +6,8 @@ from datetime import datetime
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Enable CORS
 CORS(app)
 
 # Load environment variables
@@ -24,6 +26,7 @@ class WFHRequest(db.Model):
     time_of_day = db.Column(db.String(10), nullable=False)  # Options: AM, PM, Full Day
     reason = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(20), default='Pending')  # Default to pending
+    team = db.Column(db.String(50), nullable=False)  # Manager's team or department
 
     def __repr__(self):
         return f'<WFHRequest {self.username} - {self.requested_dates}>'
@@ -33,7 +36,7 @@ class WFHRequest(db.Model):
 def create_tables():
     db.create_all()
 
-# Route to apply for WFH arrangement
+# Route to apply for WFH arrangement (For Users)
 @app.route('/apply_wfh', methods=['POST'])
 def apply_wfh():
     try:
@@ -43,7 +46,6 @@ def apply_wfh():
         time_of_day = data.get('time_of_day')
         reason = data.get('reason', '')
 
-        # Validate required fields
         if not username or not requested_dates or not time_of_day:
             return jsonify({"error": "Missing required fields"}), 400
 
@@ -51,12 +53,10 @@ def apply_wfh():
         if not can_apply_wfh(username, requested_dates):
             return jsonify({"error": "You have reached your WFH limit or have conflicting dates"}), 400
 
-        # Create WFH request object
-        new_request = WFHRequest(username=username, requested_dates=','.join(requested_dates), time_of_day=time_of_day, reason=reason)
+        new_request = WFHRequest(username=username, requested_dates=','.join(requested_dates), time_of_day=time_of_day, reason=reason, team='Team A')
         db.session.add(new_request)
         db.session.commit()
 
-        # Return success response within 30 seconds
         return jsonify({"message": "WFH request submitted successfully!"}), 200
 
     except Exception as e:
@@ -83,8 +83,110 @@ def can_apply_wfh(username, requested_dates):
     month_requests = [req for req in user_requests if datetime.strptime(req.requested_dates.split(',')[0], '%Y-%m-%d').month == current_month and datetime.strptime(req.requested_dates.split(',')[0], '%Y-%m-%d').year == current_year]
     if len(month_requests) >= 5:
         return False
+    
+# Route for Manager to view pending WFH requests
+@app.route('/pending_wfh_requests', methods=['GET'])
+def view_pending_wfh_requests():
+    manager_username = request.args.get('manager_username')
+    if not manager_username:
+        return jsonify({"error": "Manager username is required"}), 400
 
-    return True
+    team = get_manager_team(manager_username)
+    pending_requests = WFHRequest.query.filter_by(team=team, status='Pending').all()
+
+    requests_data = [
+        {
+            "id": req.id,
+            "username": req.username,
+            "requested_dates": req.requested_dates,
+            "time_of_day": req.time_of_day,
+            "reason": req.reason,
+            "status": req.status
+        } for req in pending_requests
+    ]
+
+    return jsonify(requests_data), 200
+
+# Route for Manager to approve WFH requests
+@app.route('/approve_wfh_request', methods=['POST'])
+def approve_wfh_request():
+    try:
+        data = request.json
+        request_id = data.get('request_id')
+        manager_username = data.get('manager_username')
+
+        if not request_id or not manager_username:
+            return jsonify({"error": "Request ID and Manager username are required"}), 400
+
+        wfh_request = WFHRequest.query.filter_by(id=request_id, status='Pending').first()
+        if not wfh_request:
+            return jsonify({"error": "No pending WFH request found"}), 404
+
+        team = get_manager_team(manager_username)
+        current_team_wfh = get_team_wfh_count(team, wfh_request.requested_dates)
+        total_team_members = get_total_team_members(team)
+
+        if current_team_wfh / total_team_members > 0.5:
+            return jsonify({"error": "Cannot approve request: More than 50% of the team is already working from home"}), 400
+
+        wfh_request.status = 'Approved'
+        db.session.commit()
+
+        notify_staff_member(wfh_request.username, wfh_request.requested_dates, "Approved")
+        return jsonify({"message": "WFH request approved successfully!"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/reject_wfh_request', methods=['POST'])
+def reject_wfh_request():
+    """
+    Manager rejects a WFH request with a reason, ensuring that the rejection reason is non-empty.
+    """
+    try:
+        data = request.json
+        request_id = data.get('request_id')
+        manager_username = data.get('manager_username')
+        rejection_reason = data.get('rejection_reason')
+
+        # Validate that request ID, manager username, and rejection reason are provided
+        if not request_id or not manager_username or not rejection_reason:
+            return jsonify({"error": "Request ID, Manager username, and rejection reason are required"}), 400
+
+        if len(rejection_reason.strip()) == 0:
+            return jsonify({"error": "Rejection reason cannot be empty"}), 400
+
+        # Retrieve the WFH request by ID
+        wfh_request = WFHRequest.query.filter_by(id=request_id, status='Pending').first()
+        if not wfh_request:
+            return jsonify({"error": "No pending WFH request found"}), 404
+
+        # Reject the WFH request and store the rejection reason
+        wfh_request.status = 'Rejected'
+        wfh_request.reason = rejection_reason
+        db.session.commit()
+
+        # Notify the staff member (mock function)
+        notify_staff_member(wfh_request.username, wfh_request.requested_dates, "Rejected", rejection_reason)
+
+        return jsonify({"message": "WFH request rejected successfully!"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Helper functions (mock implementations)
+
+def get_manager_team(manager_username):
+    return "Team A"
+
+def get_team_wfh_count(team, requested_dates):
+    return 3
+
+def get_total_team_members(team):
+    return 10
+
+def notify_staff_member(username, requested_dates, status, reason=""):
+     print(f"Notified {username} that their WFH request for {requested_dates} was {status}. Reason: {reason}")
 
 # Health check route
 @app.route('/health', methods=['GET'])
