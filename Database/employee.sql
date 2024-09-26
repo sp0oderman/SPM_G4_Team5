@@ -26,11 +26,13 @@ CREATE TABLE IF NOT EXISTS `Employee` (
   FOREIGN KEY (`Reporting_Manager`) REFERENCES `Employee`(`Staff_ID`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- INSERT statements to add employee data, maybe can import CSV file into the database using sql command(right now below data is mock)
-INSERT INTO `Employee` (`Staff_ID`, `Staff_FName`, `Staff_LName`, `Dept`, `Position`, `Country`, `Email`, `Reporting_Manager`, `Role`) VALUES
-(1, 'John', 'Doe', 'Sales', 'Manager', 'USA', 'john.doe@example.com', NULL, 3),
-(2, 'Jane', 'Smith', 'Sales', 'Staff', 'USA', 'jane.smith@example.com', 1, 2),
-(3, 'Alice', 'Johnson', 'Marketing', 'Staff', 'USA', 'alice.johnson@example.com', 1, 2),
-(4, 'Bob', 'Williams', 'HR', 'HR Manager', 'USA', 'bob.williams@example.com', NULL, 1);
+-- Load data from CSV into the Employee table
+LOAD DATA INFILE '/SPM_G4_Team5/Database/employeenew.csv'
+INTO TABLE Employee
+FIELDS TERMINATED BY ','  -- Assuming CSV is comma-separated
+ENCLOSED BY '"'  -- Assuming fields are enclosed by double quotes
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS  -- Skip header row
+(Staff_ID, Staff_FName, Staff_LName, Dept, Position, Country, Email, Reporting_Manager, Role);
 
 COMMIT;
