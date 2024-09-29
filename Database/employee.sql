@@ -11,7 +11,7 @@ USE `employee_management`;
 -- Drop the Employee table if it exists (to reset the schema)
 DROP TABLE IF EXISTS `Employee`;
 
--- Employee table based on the provided schema
+-- Create the Employee table based on the provided schema
 CREATE TABLE IF NOT EXISTS `Employee` (
   `Staff_ID` INT NOT NULL,
   `Staff_FName` VARCHAR(50) NOT NULL,
@@ -29,10 +29,10 @@ CREATE TABLE IF NOT EXISTS `Employee` (
 -- Load data from CSV into the Employee table
 LOAD DATA INFILE '/SPM_G4_Team5/Database/employeenew.csv'
 INTO TABLE Employee
-FIELDS TERMINATED BY ','  -- Assuming CSV is comma-separated
-ENCLOSED BY '"'  -- Assuming fields are enclosed by double quotes
+FIELDS TERMINATED BY ','  
+ENCLOSED BY '"'  
 LINES TERMINATED BY '\n'
-IGNORE 1 ROWS  -- Skip header row
+IGNORE 1 ROWS  -- Skip the header row
 (Staff_ID, Staff_FName, Staff_LName, Dept, Position, Country, Email, Reporting_Manager, Role);
 
 COMMIT;
