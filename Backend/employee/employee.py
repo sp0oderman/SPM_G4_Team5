@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 import psycopg2
 from dotenv import load_dotenv
 import os
-
 from sqlalchemy import or_, and_
+from functools import wraps
 
 load_dotenv()
 
@@ -46,22 +47,40 @@ class employees(db.Model):
 
     def json(self):
         return {
-                "staff_id": self.staff_id,
-                "staff_fname": self.staff_fname,
-                "staff_lname": self.staff_lname,
-                "dept": self.dept,
-                "position": self.position,
-                "country": self.country,
-                "email": self.email,
-                "reporting_manager": self.reporting_manager,
-                "role": self.role
-            }
+            "staff_id": self.staff_id,
+            "staff_fname": self.staff_fname,
+            "staff_lname": self.staff_lname,
+            "dept": self.dept,
+            "position": self.position,
+            "country": self.country,
+            "email": self.email,
+            "reporting_manager": self.reporting_manager,
+            "role": self.role
+        }
+
+
+def hr_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        role = request.headers.get('X-User-Role')
+
+        if not role:
+            return jsonify({'message': 'Role information is missing!'}), 401
+
+        if int(role) != 1:  # 1 is HR role
+            return jsonify({'message': 'Not authorized. Only HR personnel can access this resource.'}), 403
+
+        return f(*args, **kwargs)
+
+    return decorated
+
 
 @app.route("/")
 def homepage():
     return "Welcome to the homepage of the employee microservice (SPM)."
 
 @app.route("/employees")
+@hr_required
 def get_all():
     employee_list = db.session.scalars(db.select(employees)).all()
 
@@ -82,16 +101,55 @@ def get_all():
     ), 404
 
 
+@app.route("/employees/departments")
+def get_departments():
+    departments = db.session.query(employees.dept).distinct().all()
+    department_list = [dept[0] for dept in departments]
+
+    if department_list:
+        return jsonify(
+            {
+                "code": 200,
+                "data": {
+                    "departments": department_list
+                }
+            }
+        )
+    return jsonify(
+        {
+            "code": 404,
+            "message": "No departments found."
+        }
+    ), 404
+
+@app.route("/employees/reporting_manager/<int:staff_id>")
+def get_reporting_manager(staff_id):
+    employee = db.session.query(employees).filter_by(staff_id=staff_id).first()
+    if employee:
+        return jsonify({
+            "code": 200,
+            "data": {
+                "staff_id": staff_id,
+                "reporting_manager": employee.reporting_manager,
+                "dept": employee.dept  # Add the department information
+            }
+        })
+    return jsonify({
+        "code": 404,
+        "message": "Employee not found."
+    }), 404
+
+
 @app.route("/employees/<int:staff_id_num>")
+@hr_required
 def find_by_staff_id(staff_id_num):
     employee = db.session.scalars(
-    	db.select(employees).filter_by(staff_id=staff_id_num).
-    	limit(1)
-        ).first()
+        db.select(employees).filter_by(staff_id=staff_id_num).
+        limit(1)
+    ).first()
 
     if employee:
         return jsonify(
-            
             {
                 "code": 200,
                 "data": {
@@ -109,8 +167,8 @@ def find_by_staff_id(staff_id_num):
 
 
 @app.route("/employees/team/<string:dept_name>/<int:reporting_manager_id_num>")
+@hr_required
 def find_by_team(dept_name, reporting_manager_id_num):
-    
     # Check if department exists
     dept_exists = db.session.query(
         db.session.query(employees).filter_by(dept=dept_name).exists()
@@ -125,10 +183,10 @@ def find_by_team(dept_name, reporting_manager_id_num):
         ), 404
 
     team_manager = db.session.scalars(
-    	db.select(employees).filter_by(staff_id=reporting_manager_id_num).
-    	limit(1)
-        ).first()
-    
+        db.select(employees).filter_by(staff_id=reporting_manager_id_num).
+        limit(1)
+    ).first()
+
     if not team_manager:
         return jsonify(
             {
@@ -136,9 +194,9 @@ def find_by_team(dept_name, reporting_manager_id_num):
                 "message": "Team manager not found."
             }
         ), 404
-    
+
     team_list = db.session.scalars(
-    	db.select(employees).filter(
+        db.select(employees).filter(
             and_(
                 employees.reporting_manager == reporting_manager_id_num,
                 employees.dept == dept_name
@@ -157,7 +215,6 @@ def find_by_team(dept_name, reporting_manager_id_num):
                 }
             }
         )
-    
     return jsonify(
         {
             "code": 404,
@@ -166,9 +223,10 @@ def find_by_team(dept_name, reporting_manager_id_num):
     ), 404
 
 @app.route("/employees/dept/<string:dept_name>")
+@hr_required
 def find_by_dept(dept_name):
     dept_list = db.session.scalars(
-    	db.select(employees).filter_by(dept=dept_name)).all()
+        db.select(employees).filter_by(dept=dept_name)).all()
 
     if len(dept_list):
         return jsonify(
@@ -188,9 +246,10 @@ def find_by_dept(dept_name):
     ), 404
 
 @app.route("/employees/role/<int:role_num>")
+@hr_required
 def find_by_role(role_num):
     role_list = db.session.scalars(
-    	db.select(employees).filter_by(role=role_num)).all()
+        db.select(employees).filter_by(role=role_num)).all()
 
     if len(role_list):
         return jsonify(
