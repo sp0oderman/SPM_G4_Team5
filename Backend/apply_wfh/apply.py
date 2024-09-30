@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Load environment variables
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///wfh_requests.db')  # Fallback to SQLite if env variable not set
+DATABASE_URL = os.getenv('mysql+mysqlconnector://root@localhost:3306/employee', 'sqlite:///wfh_requests.db')  # Fallback to SQLite if env variable not set
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
