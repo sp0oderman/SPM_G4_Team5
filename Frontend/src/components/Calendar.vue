@@ -1,27 +1,56 @@
 <template>
-    <v-row class="fill-height">
-      <v-col>
-        <v-sheet height="600">
-          <v-calendar
-            ref="calendar"
-            :events="events"
-            color="primary"
-            type="month"
-          ></v-calendar>
-        </v-sheet>
-      </v-col>
-    </v-row>
-  </template>
-  
-  <script>
-    export default {
-      data: () => ({
-        focus: '',
-        events: [],
-        colors: ['blue', 'indigo', 'deep-purple', 'cyan', 'green', 'orange', 'grey darken-1',],
-      }),
-      mounted() {},
-      methods: {},
+  <FullCalendar :options="calendarOptions" />
+  <ApplyWFHPrompt ref="applyWFHPrompt" @submit="handleSubmit" />
+</template>
+
+<script>
+import FullCalendar from '@fullcalendar/vue3'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import interactionPlugin from '@fullcalendar/interaction'
+
+export default {
+  components: {
+    FullCalendar
+  },
+  data() {
+    // Calculate date ranges based on customer requirement
+    // -2 months from today
+    // +3 months from today
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setMonth(today.getMonth() - 2);
+    const endDate = new Date(today);
+    endDate.setMonth(today.getMonth() + 3);
+
+    // Adjusting to the end of the month for the endDate
+    endDate.setDate(new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate());
+
+    return {
+      calendarOptions: {
+        plugins: [ dayGridPlugin, interactionPlugin ],
+        initialView: 'dayGridMonth',
+        dateClick: this.handleDateClick,
+        //TODO: List out personal calendar with existing WFH applications
+        events: [
+          { title: 'Test event', date: '2024-10-01' },
+        ],
+        validRange: {
+          start: startDate.toISOString().split('T')[0],
+          end: endDate.toISOString().split('T')[0]
+        }
+      }
     }
-  </script>
-  
+  },
+  methods: {
+    handleDateClick(arg) {
+      this.$refs.applyWFHPrompt.open(arg.dateStr);
+    },
+
+    handleSubmit(data) {
+      console.log('Selected date:', data.date);
+      console.log('Selected option:', data.option);
+      console.log('Comment:', data.comment);
+    }
+  }
+}
+</script>
