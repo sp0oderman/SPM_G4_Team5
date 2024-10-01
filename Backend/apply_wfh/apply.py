@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Load environment variables
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///wfh_requests.db')  # Fallback to SQLite if env variable not set
+DATABASE_URL = os.getenv('mysql+mysqlconnector://root@localhost:3306/employee', 'sqlite:///wfh_requests.db')  # Fallback to SQLite if env variable not set
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -64,25 +64,26 @@ def apply_wfh():
 
 # Helper function to check if user can apply for WFH
 def can_apply_wfh(username, requested_dates):
+    return True
     """
     Mock function to check WFH limits and conflicts.
     """
-    # Retrieve all WFH requests for the user in the current month
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-    user_requests = WFHRequest.query.filter_by(username=username).all()
+    # # Retrieve all WFH requests for the user in the current month
+    # current_month = datetime.now().month
+    # current_year = datetime.now().year
+    # user_requests = WFHRequest.query.filter_by(username=username).all()
 
-    # Check for conflicts in requested dates
-    for req in user_requests:
-        existing_dates = req.requested_dates.split(',')
-        for date in requested_dates:
-            if date in existing_dates:
-                return False
+    # # Check for conflicts in requested dates
+    # for req in user_requests:
+    #     existing_dates = req.requested_dates.split(',')
+    #     for date in requested_dates:
+    #         if date in existing_dates:
+    #             return False
 
-    # Check if user has reached the monthly limit (mock rule: 5 requests per month)
-    month_requests = [req for req in user_requests if datetime.strptime(req.requested_dates.split(',')[0], '%Y-%m-%d').month == current_month and datetime.strptime(req.requested_dates.split(',')[0], '%Y-%m-%d').year == current_year]
-    if len(month_requests) >= 5:
-        return False
+    # # Check if user has reached the monthly limit (mock rule: 5 requests per month)
+    # month_requests = [req for req in user_requests if datetime.strptime(req.requested_dates.split(',')[0], '%Y-%m-%d').month == current_month and datetime.strptime(req.requested_dates.split(',')[0], '%Y-%m-%d').year == current_year]
+    # if len(month_requests) >= 5:
+    #     return False
     
 # Route for Manager to view pending WFH requests
 @app.route('/pending_wfh_requests', methods=['GET'])
