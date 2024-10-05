@@ -22,7 +22,7 @@ db = SQLAlchemy(app)
 class WFHRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), nullable=False)
-    requested_dates = db.Column(db.String(255), nullable=False)
+    requested_dates = db.Column(db.Text, nullable=False)
     time_of_day = db.Column(db.String(10), nullable=False)  # Options: AM, PM, Full Day
     reason = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(20), default='Pending')  # Default to pending
@@ -64,27 +64,20 @@ def apply_wfh():
 
 # Helper function to check if user can apply for WFH
 def can_apply_wfh(username, requested_dates):
+
+    # Retrieve all WFH requests for the user in the current month
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    user_requests = WFHRequest.query.filter_by(username=username).all()
+
+    # Check for conflicts in requested dates
+    for req in user_requests:
+        existing_dates = req.requested_dates.split(',')
+        for date in requested_dates:
+            if date in existing_dates:
+                return False
     return True
-    """
-    Mock function to check WFH limits and conflicts.
-    """
-    # # Retrieve all WFH requests for the user in the current month
-    # current_month = datetime.now().month
-    # current_year = datetime.now().year
-    # user_requests = WFHRequest.query.filter_by(username=username).all()
 
-    # # Check for conflicts in requested dates
-    # for req in user_requests:
-    #     existing_dates = req.requested_dates.split(',')
-    #     for date in requested_dates:
-    #         if date in existing_dates:
-    #             return False
-
-    # # Check if user has reached the monthly limit (mock rule: 5 requests per month)
-    # month_requests = [req for req in user_requests if datetime.strptime(req.requested_dates.split(',')[0], '%Y-%m-%d').month == current_month and datetime.strptime(req.requested_dates.split(',')[0], '%Y-%m-%d').year == current_year]
-    # if len(month_requests) >= 5:
-    #     return False
-    
 # Route for Manager to view pending WFH requests
 @app.route('/pending_wfh_requests', methods=['GET'])
 def view_pending_wfh_requests():
