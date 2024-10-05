@@ -11,31 +11,45 @@ app = Flask(__name__)
 CORS(app)
 
 # Load environment variables
-DATABASE_URL = os.getenv('mysql+mysqlconnector://root@localhost:3306/employee', 'sqlite:///wfh_requests.db')  # Fallback to SQLite if env variable not set
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/employee_management'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app)
 
-# Define WFH Request Model
-class WFHRequest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), nullable=False)
-    requested_dates = db.Column(db.Text, nullable=False)
-    time_of_day = db.Column(db.String(10), nullable=False)  # Options: AM, PM, Full Day
-    reason = db.Column(db.String(255), nullable=True)
-    status = db.Column(db.String(20), default='Pending')  # Default to pending
-    team = db.Column(db.String(50), nullable=False)  # Manager's team or department
-
-    def __repr__(self):
-        return f'<WFHRequest {self.username} - {self.requested_dates}>'
+# Define Employee Model
+class Employee(db.Model):
+    __tablename__ = 'Employee'
+    Staff_ID = db.Column(db.Integer, primary_key=True)
+    Staff_FName = db.Column(db.String(50), nullable=False)
+    Staff_LName = db.Column(db.String(50), nullable=False)
+    Dept = db.Column(db.String(50), nullable=False)
+    Position = db.Column(db.String(50), nullable=False)
+    Country = db.Column(db.String(50), nullable=False)
+    Email = db.Column(db.String(50), nullable=False)
+    Reporting_Manager = db.Column(db.Integer, db.ForeignKey('Employee.Staff_ID'))
+    Role = db.Column(db.Integer, nullable=False)
 
 # Create the database tables
 @app.before_first_request
 def create_tables():
     db.create_all()
 
+# Example: Get the list of employees reporting to a manager
+@app.route('/get_manager_team/<int:manager_id>', methods=['GET'])
+def get_manager_team(manager_id):
+    try:
+        team = Employee.query.filter_by(Reporting_Manager=manager_id).all()
+        team_data = [{
+            'Staff_ID': employee.Staff_ID,
+            'Staff_FName': employee.Staff_FName,
+            'Staff_LName': employee.Staff_LName,
+            'Position': employee.Position
+        } for employee in team]
+        return jsonify(team_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 # Route to apply for WFH arrangement (For Users)
 @app.route('/apply_wfh', methods=['POST'])
 def apply_wfh():
@@ -104,33 +118,29 @@ def view_pending_wfh_requests():
 # Route for Manager to approve WFH requests
 @app.route('/approve_wfh_request', methods=['POST'])
 def approve_wfh_request():
-    try:
-        data = request.json
-        request_id = data.get('request_id')
-        manager_username = data.get('manager_username')
+    data = request.json
+    request_id = data.get('request_id')
+    manager_id = data.get('manager_id')
+    
+    # Fetch the employee requesting WFH
+    wfh_request = WFHRequest.query.filter_by(id=request_id, status='Pending').first()
+    if not wfh_request:
+        return jsonify({"error": "No pending WFH request found"}), 404
+    
+    # Check the manager's team
+    manager = Employee.query.filter_by(Staff_ID=manager_id).first()
+    team_size = Employee.query.filter_by(Reporting_Manager=manager_id).count()
 
-        if not request_id or not manager_username:
-            return jsonify({"error": "Request ID and Manager username are required"}), 400
+    # Example business logic: enforce 50% team limit
+    wfh_count = WFHRequest.query.filter_by(status='Approved', Reporting_Manager=manager_id).count()
+    if wfh_count / team_size > 0.5:
+        return jsonify({"error": "More than 50% of the team is already working from home"}), 400
 
-        wfh_request = WFHRequest.query.filter_by(id=request_id, status='Pending').first()
-        if not wfh_request:
-            return jsonify({"error": "No pending WFH request found"}), 404
-
-        team = get_manager_team(manager_username)
-        current_team_wfh = get_team_wfh_count(team, wfh_request.requested_dates)
-        total_team_members = get_total_team_members(team)
-
-        if current_team_wfh / total_team_members > 0.5:
-            return jsonify({"error": "Cannot approve request: More than 50% of the team is already working from home"}), 400
-
-        wfh_request.status = 'Approved'
-        db.session.commit()
-
-        notify_staff_member(wfh_request.username, wfh_request.requested_dates, "Approved")
-        return jsonify({"message": "WFH request approved successfully!"}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # Approve the request if within limits
+    wfh_request.status = 'Approved'
+    db.session.commit()
+    
+    return jsonify({"message": "WFH request approved successfully!"})
     
 @app.route('/reject_wfh_request', methods=['POST'])
 def reject_wfh_request():
