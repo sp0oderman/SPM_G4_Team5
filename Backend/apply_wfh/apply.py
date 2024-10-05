@@ -67,7 +67,7 @@ def apply_wfh():
         if not can_apply_wfh(username, requested_dates):
             return jsonify({"error": "You have reached your WFH limit or have conflicting dates"}), 400
 
-        new_request = WFHRequest(username=username, requested_dates=','.join(requested_dates), time_of_day=time_of_day, reason=reason, team='Team A')
+        new_request = Employee(username=username, requested_dates=','.join(requested_dates), time_of_day=time_of_day, reason=reason, team='Team A')
         db.session.add(new_request)
         db.session.commit()
 
@@ -82,7 +82,7 @@ def can_apply_wfh(username, requested_dates):
     # Retrieve all WFH requests for the user in the current month
     current_month = datetime.now().month
     current_year = datetime.now().year
-    user_requests = WFHRequest.query.filter_by(username=username).all()
+    user_requests = Employee.query.filter_by(username=username).all()
 
     # Check for conflicts in requested dates
     for req in user_requests:
@@ -100,7 +100,7 @@ def view_pending_wfh_requests():
         return jsonify({"error": "Manager username is required"}), 400
 
     team = get_manager_team(manager_username)
-    pending_requests = WFHRequest.query.filter_by(team=team, status='Pending').all()
+    pending_requests = Employee.query.filter_by(team=team, status='Pending').all()
 
     requests_data = [
         {
@@ -123,7 +123,7 @@ def approve_wfh_request():
     manager_id = data.get('manager_id')
     
     # Fetch the employee requesting WFH
-    wfh_request = WFHRequest.query.filter_by(id=request_id, status='Pending').first()
+    wfh_request = Employee.query.filter_by(id=request_id, status='Pending').first()
     if not wfh_request:
         return jsonify({"error": "No pending WFH request found"}), 404
     
@@ -132,7 +132,7 @@ def approve_wfh_request():
     team_size = Employee.query.filter_by(Reporting_Manager=manager_id).count()
 
     # Example business logic: enforce 50% team limit
-    wfh_count = WFHRequest.query.filter_by(status='Approved', Reporting_Manager=manager_id).count()
+    wfh_count = Employee.query.filter_by(status='Approved', Reporting_Manager=manager_id).count()
     if wfh_count / team_size > 0.5:
         return jsonify({"error": "More than 50% of the team is already working from home"}), 400
 
@@ -161,7 +161,7 @@ def reject_wfh_request():
             return jsonify({"error": "Rejection reason cannot be empty"}), 400
 
         # Retrieve the WFH request by ID
-        wfh_request = WFHRequest.query.filter_by(id=request_id, status='Pending').first()
+        wfh_request = Employee.query.filter_by(id=request_id, status='Pending').first()
         if not wfh_request:
             return jsonify({"error": "No pending WFH request found"}), 404
 
