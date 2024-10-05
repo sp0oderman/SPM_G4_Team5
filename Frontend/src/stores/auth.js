@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', {
       } 
       catch (error) {
         this.user = null;
-        this.error = 'An error occurred while trying to authenticate.';
+        this.error = 'Invalid email';
       }
     },
     logout() {

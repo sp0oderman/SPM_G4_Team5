@@ -6,7 +6,7 @@
         <v-radio-group v-model="selectedOption" :mandatory="false">
           <v-radio label="AM" value="AM"></v-radio>
           <v-radio label="PM" value="PM"></v-radio>
-          <v-radio label="Full Day" value="FullDay"></v-radio>
+          <v-radio label="Full Day" value="Full Day"></v-radio>
         </v-radio-group>
         <v-textarea v-model="comment" label="Comments (Optional)" outlined></v-textarea>
       </v-card-text>

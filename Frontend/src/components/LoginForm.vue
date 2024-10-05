@@ -6,22 +6,17 @@
       </v-card-title>
       <v-card-subtitle>
         <v-form>
-          <v-text-field
-            v-model="email"
-            label="Email"
-            outlined
-            full-width
-          ></v-text-field>
+          <v-text-field v-model="email" label="Email" outlined full-width></v-text-field>
           <v-row class="mt-3" justify="center">
             <v-col cols="auto">
-              <v-btn
-                color="primary"
-                @click="login"
-              >
+              <v-btn color="primary" @click="login">
                 Login
               </v-btn>
             </v-col>
           </v-row>
+          <v-alert v-if="loginError" type="error" dismissible class="mt-3">
+            {{ loginError }}
+          </v-alert>
         </v-form>
       </v-card-subtitle>
     </v-card>
@@ -32,12 +27,14 @@
 import { useAuthStore } from '@/stores/auth';
 
 export default {
+  //REMOVE LATER
   setup(){
     console.log('User Details:', useAuthStore().getUser);
   },
   data() {
     return {
       email: '',
+      loginError: null,
     };
   },
   methods: {
@@ -48,7 +45,7 @@ export default {
         this.$router.push({ name: '/Schedule' });
       } 
       else {
-        this.emailErrors.push(authStore.error || 'Authentication failed.');
+        this.loginError = authStore.error;
       }
     }
   },
