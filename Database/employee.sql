@@ -26,6 +26,19 @@ CREATE TABLE IF NOT EXISTS `Employee` (
   FOREIGN KEY (`Reporting_Manager`) REFERENCES `Employee`(`Staff_ID`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- Create the WFHRequest table
+DROP TABLE IF EXISTS `WFHRequest`;
+
+CREATE TABLE IF NOT EXISTS `WFHRequest` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `staff_id` INT NOT NULL,
+  `requested_dates` VARCHAR(255) NOT NULL,
+  `time_of_day` VARCHAR(10) NOT NULL,  -- AM, PM, Full Day
+  `reason` VARCHAR(255),
+  `status` VARCHAR(20) DEFAULT 'Pending',
+  FOREIGN KEY (`staff_id`) REFERENCES `Employee`(`Staff_ID`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- Load data from CSV into the Employee table
 LOAD DATA INFILE '/SPM_G4_Team5/Database/employeenew.csv'
 INTO TABLE Employee
