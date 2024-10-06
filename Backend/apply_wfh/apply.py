@@ -10,8 +10,8 @@ app = Flask(__name__)
 # Enable CORS
 CORS(app)
 
-# Database Configuration (MySQL Example)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/employee_management'
+# Database Configuration (change the username and pw to your own)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://username:pw@localhost/employee_management'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
@@ -91,16 +91,16 @@ def apply_wfh():
 
 # Helper function to check if user can apply for WFH
 def can_apply_wfh(staff_id, requested_dates):
-    # Retrieve all WFH requests for the staff in the current month
-    current_month = datetime.now().month
-    user_requests = WFHRequest.query.filter_by(staff_id=staff_id).all()
+    # # Retrieve all WFH requests for the staff in the current month
+    # current_month = datetime.now().month
+    # user_requests = WFHRequest.query.filter_by(staff_id=staff_id).all()
 
-    # Check for conflicts in requested dates
-    for req in user_requests:
-        existing_dates = req.requested_dates.split(',')
-        for date in requested_dates:
-            if date in existing_dates:
-                return False
+    # # Check for conflicts in requested dates
+    # for req in user_requests:
+    #     existing_dates = req.requested_dates.split(',')
+    #     for date in requested_dates:
+    #         if date in existing_dates:
+    #             return False
     return True
 
 # Route for Manager to view pending WFH requests

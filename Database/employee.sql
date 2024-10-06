@@ -8,7 +8,10 @@ SET time_zone = "+00:00";
 CREATE DATABASE IF NOT EXISTS `employee_management` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE `employee_management`;
 
--- Drop the Employee table if it exists (to reset the schema)
+-- Drop the WFHRequest table first (because it references Employee)
+DROP TABLE IF EXISTS `WFHRequest`;
+
+-- Drop the Employee table next
 DROP TABLE IF EXISTS `Employee`;
 
 -- Create the Employee table based on the provided schema
@@ -26,9 +29,7 @@ CREATE TABLE IF NOT EXISTS `Employee` (
   FOREIGN KEY (`Reporting_Manager`) REFERENCES `Employee`(`Staff_ID`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Create the WFHRequest table
-DROP TABLE IF EXISTS `WFHRequest`;
-
+-- Create the WFHRequest table, referencing Employee's Staff_ID
 CREATE TABLE IF NOT EXISTS `WFHRequest` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `staff_id` INT NOT NULL,
@@ -39,8 +40,8 @@ CREATE TABLE IF NOT EXISTS `WFHRequest` (
   FOREIGN KEY (`staff_id`) REFERENCES `Employee`(`Staff_ID`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- Load data from CSV into the Employee table
-LOAD DATA INFILE '/SPM_G4_Team5/Database/employeenew.csv'
+-- Load local data from CSV into the Employee table (might need to edit my.ini file to allow local infile if your sql cant run this)
+LOAD DATA LOCAL INFILE 'C:/Users/wuhao/OneDrive/Documents/GitHub/SPM_G4_Team5/Database/employeenew.csv'
 INTO TABLE Employee
 FIELDS TERMINATED BY ','  
 ENCLOSED BY '"'  
