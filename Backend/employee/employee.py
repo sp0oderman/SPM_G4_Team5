@@ -16,6 +16,8 @@ postgres_db = os.getenv('POSTGRES_DB')
 
 app = Flask(__name__)
 
+CORS(app)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}/{postgres_db}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -265,6 +267,27 @@ def find_by_role(role_num):
         {
             "code": 404,
             "message": "Role not found."
+        }
+    ), 404
+
+@app.route("/employees/auth/<string:email>")
+def get_employee_by_email(email):
+    employee = db.session.scalars(
+    	db.select(employees).filter_by(email=email).
+    	limit(1)
+        ).first()
+
+    if employee:
+        return jsonify(
+            {
+                "code": 200,
+                "data": employee.json()
+            }
+        )
+    return jsonify(
+        {
+            "code": 404,
+            "message": "Employee not found."
         }
     ), 404
 
