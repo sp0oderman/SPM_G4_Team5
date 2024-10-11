@@ -1,6 +1,5 @@
 <template>
   <FullCalendar :options="calendarOptions" />
-  <ApplyWFHPrompt ref="applyWFHPrompt" @submit="handleSubmit" />
 </template>
 
 <script>
@@ -32,7 +31,7 @@ export default {
         plugins: [ dayGridPlugin, interactionPlugin ],
         initialView: 'dayGridMonth',
         dateClick: this.handleDateClick,
-        // TODO: List out personal calendar with existing WFH applications
+        // TODO: List out team calendar with existing WFH applications
         events: [
           { title: 'Test event', date: '2024-10-01' },
         ],
@@ -44,36 +43,6 @@ export default {
     }
   },
   methods: {
-    handleDateClick(arg) {
-      this.$refs.applyWFHPrompt.open(arg.dateStr);
-    },
-
-    async handleSubmit(data) {
-      console.log('Selected date:', data.date);
-      console.log('Selected option:', data.option);
-      console.log('Comment:', data.comment);
-
-      const payload = {
-        username: useAuthStore().getUser.email,
-        requested_dates: [data.date, "2024-10-19"],
-        time_of_day: data.option,
-        reason: data.comment
-      };
-
-      try {
-        //Modify link accordingly
-        const response = await axios.post('http://192.168.10.106:5000/apply_wfh', payload);
-        if (response.status === 200) {
-          console.log("successfully applied")
-        } 
-        else {
-          console.log("failed to apply")
-        }
-      } 
-      catch (error) {
-        console.log("failed to apply")
-      }
-    }
   }
 }
 </script>
