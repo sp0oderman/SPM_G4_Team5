@@ -70,4 +70,4 @@ jobs:
       # This step runs all unit tests using Python's unittest module
       # It will automatically discover all tests in the `tests/` directory
       - name: Run tests
-        run: python -m unittest discover -s tests  # Discover and run tests from the 'tests' directory
+        run: python -m unittest discover -s Backend/tests  # Discover and run tests from the 'tests' directory
