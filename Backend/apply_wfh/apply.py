@@ -2,7 +2,15 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
-from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
+
+postgres_user = os.getenv('POSTGRES_USER')
+postgres_password = os.getenv('POSTGRES_PASSWORD')
+postgres_host = os.getenv('POSTGRES_HOST')
+postgres_db = os.getenv('POSTGRES_DB')
+
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -10,8 +18,24 @@ app = Flask(__name__)
 # Enable CORS
 CORS(app)
 
-# Database Configuration (change the username and pw to your own)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://username:pw@localhost/employee_management'
+# Check if the app is in testing mode
+if os.environ['FLASK_ENV'] == 'testing':
+    # Use SQLite for testing
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+else:
+    # Load environment variables for production/development
+    postgres_user = os.getenv('POSTGRES_USER')
+    postgres_password = os.getenv('POSTGRES_PASSWORD')
+    postgres_host = os.getenv('POSTGRES_HOST')
+    postgres_db = os.getenv('POSTGRES_DB')
+
+    # Ensure none of the variables are None
+    if not all([postgres_user, postgres_password, postgres_host, postgres_db]):
+        raise ValueError("One or more environment variables for PostgreSQL are missing")
+
+    # Configure PostgreSQL URI
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}/{postgres_db}"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
@@ -41,11 +65,6 @@ class WFHRequest(db.Model):
 
     # Relationship to access employee details from WFH request
     employee = db.relationship('Employee', backref='wfh_requests')
-
-# Create the database tables
-@app.before_first_request
-def create_tables():
-    db.create_all()
 
 # Route for Manager to view employees reporting to them
 @app.route('/get_manager_team/<int:manager_id>', methods=['GET'])
