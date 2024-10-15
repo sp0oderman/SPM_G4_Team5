@@ -70,4 +70,6 @@ jobs:
       # This step runs all unit tests using Python's unittest module
       # It will automatically discover all tests in the `tests/` directory
       - name: Run tests
-        run: python -m unittest discover -s Backend/tests  # Discover and run tests from the 'tests' directory
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/apply_wfh  # Ensure the correct directory is in PYTHONPATH
+          python -m unittest discover -s Backend/tests  # Discover and run tests from the 'tests' directory
