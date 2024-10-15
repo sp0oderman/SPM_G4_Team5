@@ -1,0 +1,73 @@
+# Name of the GitHub Actions workflow
+name: CI
+
+# Define when this workflow should run. It will trigger on:
+# - Any push to any branch
+# - Any pull request to any branch
+on:
+  push:
+  pull_request:
+
+# Define the jobs that will run in the workflow
+jobs:
+  # This job runs the tests across different operating systems and Python versions
+  run-tests:
+    # Specify strategy for testing across multiple environments
+    strategy:
+      # If one environment fails, others will continue to run (fail-fast: false)
+      fail-fast: false
+      # Matrix defines multiple combinations for testing:
+      # - Operating systems (Ubuntu, macOS, Windows)
+      # - Python versions (from 3.7 to the latest development version, 3.12-dev)
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version:
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12-dev"
+    
+    # Name of the job that will be displayed in the Actions tab in GitHub
+    name: Test
+
+    # Specify the type of runner to use for this job (this will be different for each OS in the matrix)
+    runs-on: ${{ matrix.os }}
+
+    # Define the steps that will be executed in the job
+    steps:
+      # Step 1: Check out the code from the repository
+      # This step downloads your source code so it can be used in the workflow
+      - name: Checkout code
+        uses: actions/checkout@v3  # Use the checkout action to get the repository code
+
+      # Step 2: Set up the Python environment
+      # This step installs the specific version of Python defined in the matrix (3.7 to 3.12-dev)
+      - name: Set up Python
+        uses: actions/setup-python@v4  # Use the setup-python action to set up the Python environment
+        with:
+          python-version: ${{ matrix.python-version }}  # Use the Python version from the matrix
+
+      # Step 3 (Optional): Cache dependencies for faster builds in future runs
+      # This step caches Python packages that are downloaded by pip to speed up future runs
+      # Caching helps avoid re-downloading dependencies every time unless there are changes in requirements.txt
+      - name: Cache pip dependencies
+        uses: actions/cache@v3  # Use the cache action to save pip dependencies
+        with:
+          path: ~/.cache/pip  # Path where pip stores cached dependencies
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}  # Unique key based on OS and contents of requirements.txt
+          restore-keys: |
+            ${{ runner.os }}-pip-  # Restore cache if available from any previous run with this OS
+
+      # Step 4: Install dependencies
+      # This step installs the project's dependencies from requirements.txt using pip
+      # Make sure your project's dependencies are listed in requirements.txt (e.g., Flask, SQLAlchemy, etc.)
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt  # Install dependencies using pip
+
+      # Step 5: Run the tests
+      # This step runs all unit tests using Python's unittest module
+      # It will automatically discover all tests in the `tests/` directory
+      - name: Run tests
+        run: python -m unittest discover -s tests  # Discover and run tests from the 'tests' directory
