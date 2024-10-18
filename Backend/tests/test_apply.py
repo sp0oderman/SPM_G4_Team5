@@ -1,6 +1,19 @@
+import sys
+# Get system path to apply.py microservice
+sys.path.append('../apply_wfh')
+
+import os
+# Set FLASK_ENV to testing so that apply.py app uses sqlite URI instead of postgres URI
+os.environ['FLASK_ENV'] = 'testing'  # Set the environment to testing
+
 import unittest
 from flask_testing import TestCase
 from apply import app, db, Employee, WFHRequest
+
+
+app.config['TESTING'] = True
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'  # In-memory database for testing
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 class BaseTestCase(TestCase):
     """Base test case to set up the Flask test client and the database."""
@@ -14,8 +27,9 @@ class BaseTestCase(TestCase):
 
     def setUp(self):
         """Set up the database and create the tables before each test."""
-        db.drop_all()
-        db.create_all()
+        # Ensure the correct database URI is applied early
+        with app.app_context():
+            db.create_all()
 
         # Add a manager (John Doe) and a team member reporting to the manager
         manager = Employee(
@@ -47,8 +61,9 @@ class BaseTestCase(TestCase):
 
     def tearDown(self):
         """Destroy the database after each test."""
-        db.session.remove()
-        db.drop_all()
+        with app.app_context():
+            db.session.remove()
+            db.drop_all()
 
 
 # Unit Test Cases
