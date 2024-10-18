@@ -3,14 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
+from pathlib import Path  # To construct paths safely across different OS
 
+# Load env variables from .env and assign to variables
 load_dotenv()
-
 postgres_user = os.getenv('POSTGRES_USER')
 postgres_password = os.getenv('POSTGRES_PASSWORD')
 postgres_host = os.getenv('POSTGRES_HOST')
 postgres_db = os.getenv('POSTGRES_DB')
-
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -18,8 +18,11 @@ app = Flask(__name__)
 # Enable CORS
 CORS(app)
 
+# Get the FLASK_ENV environment variable safely
+flask_env = os.getenv('FLASK_ENV')
+
 # Check if the app is in testing mode
-if os.environ['FLASK_ENV'] == 'testing':
+if flask_env == 'testing':
     # Use SQLite for testing
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 else:
