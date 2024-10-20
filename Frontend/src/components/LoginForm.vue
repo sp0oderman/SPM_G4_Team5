@@ -42,10 +42,20 @@ export default {
       const authStore = useAuthStore();
       await authStore.authenticate(this.email);
       if (authStore.user) {
-        this.$router.push({ name: '/Schedule' });
+        if (useAuthStore().getUser.role === 1) {
+          this.$router.push({ name: '/manager/Schedule' });
+        }
+        else if (useAuthStore().getUser.role === 2) {
+          this.$router.push({ name: '/staff/Schedule' });
+        }
+
+        else if (useAuthStore().getUser.role === 3) {
+          this.$router.push({ name: '/hr/Schedule' });
+        }
       } 
       else {
         this.loginError = authStore.error;
+        useAuthStore().reset();
       }
     }
   },

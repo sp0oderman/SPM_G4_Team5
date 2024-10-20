@@ -29,7 +29,7 @@ export default {
         plugins: [ dayGridPlugin, interactionPlugin ],
         initialView: 'dayGridMonth',
         dateClick: this.handleDateClick,
-        // TODO: List out personal calendar with existing WFH applications
+        // TODO: List out team calendar with existing WFH applications
         events: [
           { title: 'Test event', date: '2024-10-01' },
         ],

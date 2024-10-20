@@ -28,6 +28,10 @@ export const useAuthStore = defineStore('auth', {
       this.user = null;
       this.error = null;
     },
+    reset(){
+      this.user = null;
+      this.error = null;
+    }
   },
   getters: {
     getUser: state => state.user

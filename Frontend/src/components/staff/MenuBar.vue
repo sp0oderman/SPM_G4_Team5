@@ -14,10 +14,10 @@ import { useAuthStore } from '@/stores/auth';
 export default {
   methods: {
     personal(){
-      this.$router.push({ name: '/Schedule' });
+      this.$router.push({ name: '/staff/Schedule' });
     },
     team(){
-      this.$router.push({ name: '/TeamSchedule' });
+      this.$router.push({ name: '/staff/TeamSchedule' });
     },
     logout() {
       const authStore = useAuthStore();
