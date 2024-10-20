@@ -1,6 +1,6 @@
-import sys
-# Get system path to apply.py microservice
-sys.path.append('../apply_wfh')
+# import sys
+# # Get system path to apply.py microservice
+# sys.path.append('../apply_wfh')
 
 import os
 # Set FLASK_ENV to testing so that apply.py app uses sqlite URI instead of postgres URI
@@ -8,7 +8,7 @@ os.environ['FLASK_ENV'] = 'testing'  # Set the environment to testing
 
 import unittest
 from flask_testing import TestCase
-from apply import app, db, Employee, WFHRequest
+from apply_wfh.apply import app, db, Employee, WFHRequest
 
 
 app.config['TESTING'] = True
