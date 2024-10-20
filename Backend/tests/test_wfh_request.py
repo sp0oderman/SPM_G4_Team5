@@ -1,6 +1,6 @@
-import sys
-# Get system path to wfh_request.py microservice
-sys.path.append('../wfh_request')
+# import sys
+# # Get system path to wfh_request.py microservice
+# sys.path.append('../wfh_request')
 
 import os
 # Set FLASK_ENV to testing so that apply.py app uses sqlite URI instead of postgres URI
