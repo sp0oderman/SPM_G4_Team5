@@ -8,7 +8,7 @@ os.environ['FLASK_ENV'] = 'testing'  # Set the environment to testing
 
 import unittest
 from flask_testing import TestCase
-from apply_wfh.apply import app, db, Employee, WFHRequest
+from apply import app, db, Employee, WFHRequest
 
 
 app.config['TESTING'] = True
