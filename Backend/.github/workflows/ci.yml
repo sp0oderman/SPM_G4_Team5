@@ -22,7 +22,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version:
-          - "3.7"
           - "3.8"
           - "3.9"
           - "3.10"
@@ -64,10 +63,21 @@ jobs:
       # This step installs the project's dependencies from requirements.txt using pip
       # Make sure your project's dependencies are listed in requirements.txt (e.g., Flask, SQLAlchemy, etc.)
       - name: Install dependencies
-        run: python -m pip install -r requirements.txt  # Install dependencies using pip
+        run: python -m pip install -r Backend/requirements.txt  # Install dependencies using pip
 
-      # Step 5: Run the tests
+      # Step 5: Set PYTHONPATH and run tests (different for Windows vs. Unix-based systems)
       # This step runs all unit tests using Python's unittest module
       # It will automatically discover all tests in the `tests/` directory
-      - name: Run tests
-        run: python -m unittest discover -s tests  # Discover and run tests from the 'tests' directory
+      - name: Run tests on Unix-based systems
+        if: runner.os != 'Windows'
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/apply_wfh  # Unix-based syntax, add path for each new test
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/wfh_request  # Unix-based syntax, add path for each new test
+          python -m unittest discover -s Backend/tests
+
+      - name: Run tests on Windows
+        if: runner.os == 'Windows'
+        run: |
+          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\apply_wfh"  # Windows PowerShell syntax, add path for each new test
+          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\wfh_request"  # Windows PowerShell syntax, add path for each new test
+          python -m unittest discover -s Backend/tests
