@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v3  # Use the checkout action to get the repository code
 
       # Step 2: Set up the Python environment
-      # This step installs the specific version of Python defined in the matrix (3.7 to 3.12-dev)
+      # This step installs the specific version of Python defined in the matrix (3.10 to 3.12-dev)
       - name: Set up Python
         uses: actions/setup-python@v4  # Use the setup-python action to set up the Python environment
         with:
