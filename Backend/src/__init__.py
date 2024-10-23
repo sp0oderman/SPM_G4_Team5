@@ -13,13 +13,21 @@ def create_app(config_class):
     
     # Initialize extensions
     db.init_app(app)
+
+    from .services.employees_services import Employees_Service
+    from .services.wfh_requests_services import WFH_Requests_Service
+
+    # Create Service instances
+    employees_service = Employees_Service(db)
+    wfh_requests_service = WFH_Requests_Service(db)
+        
+    # Import blueprints
+    from .routes.employees_routes import create_employees_blueprint
+    from .routes.wfh_requests_routes import create_wfh_requests_blueprint
     
     # Register blueprints
-    from .routes.employees_routes import employees_blueprint
-    from .routes.wfh_requests_routes import wfh_requests_blueprint
-    
-    app.register_blueprint(employees_blueprint, url_prefix='/employees')
-    app.register_blueprint(wfh_requests_blueprint, url_prefix='/wfh_requests')
+    app.register_blueprint(create_employees_blueprint(employees_service), url_prefix='/employees')
+    app.register_blueprint(create_wfh_requests_blueprint(wfh_requests_service), url_prefix='/wfh_requests')
 
-    
+
     return app

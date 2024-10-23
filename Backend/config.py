@@ -1,15 +1,16 @@
 import os
 from dotenv import load_dotenv
 
+# Load environment variables once at the start
+load_dotenv()
+
 class Config:
-    
     # Common settings
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class DevelopmentConfig(Config):
     DEBUG = True
 
-    load_dotenv()
     POSTGRES_USER = os.getenv('POSTGRES_USER')
     POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
     POSTGRES_HOST = os.getenv('POSTGRES_HOST')
@@ -20,7 +21,6 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
 
-    load_dotenv()
     POSTGRES_USER = os.getenv('POSTGRES_USER')
     POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
     POSTGRES_HOST = os.getenv('POSTGRES_HOST')
