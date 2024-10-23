@@ -8,7 +8,6 @@ from sqlalchemy import BigInteger, or_, and_
 from datetime import datetime
 
 load_dotenv()
-
 postgres_user = os.getenv('POSTGRES_USER')
 postgres_password = os.getenv('POSTGRES_PASSWORD')
 postgres_host = os.getenv('POSTGRES_HOST')
@@ -16,7 +15,27 @@ postgres_db = os.getenv('POSTGRES_DB')
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}/{postgres_db}"
+# Get the FLASK_ENV environment variable safely
+flask_env = os.getenv('FLASK_ENV')
+
+# Check if the app is in testing mode
+if flask_env == 'testing':
+    # Use SQLite for testing
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+else:
+    # Load environment variables for production/development
+    postgres_user = os.getenv('POSTGRES_USER')
+    postgres_password = os.getenv('POSTGRES_PASSWORD')
+    postgres_host = os.getenv('POSTGRES_HOST')
+    postgres_db = os.getenv('POSTGRES_DB')
+
+    # Ensure none of the variables are None
+    if not all([postgres_user, postgres_password, postgres_host, postgres_db]):
+        raise ValueError("One or more environment variables for PostgreSQL are missing")
+
+    # Configure PostgreSQL URI
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}/{postgres_db}"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -24,7 +43,7 @@ db = SQLAlchemy(app)
 class wfh_requests(db.Model):
     __tablename__ = 'wfh_request'
 
-    request_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    request_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     staff_id = db.Column(db.Integer)
     reporting_manager = db.Column(db.Integer, nullable=False)
     dept = db.Column(db.String(50), nullable=False)
@@ -84,7 +103,7 @@ def get_all():
 
 
 
-@app.route("/wfh_requests/<int:request_id_num>")
+@app.route("/wfh_requests/request_id/<int:request_id_num>")
 def find_by_request_id(request_id_num):
     wfh_request = db.session.scalars(
     	db.select(wfh_requests).filter_by(request_id=request_id_num)
@@ -105,7 +124,7 @@ def find_by_request_id(request_id_num):
         }
     ), 404
 
-@app.route("/wfh_requests/<int:staff_id_num>")
+@app.route("/wfh_requests/staff_id/<int:staff_id_num>")
 def find_by_staff_id(staff_id_num):
     staff_requests_list = db.session.scalars(
     	db.select(wfh_requests).filter_by(staff_id=staff_id_num)
@@ -130,30 +149,12 @@ def find_by_staff_id(staff_id_num):
     ), 404
 
 
-@app.route("/wfh_requests/team/<string:dept_name>/<int:reporting_manager_id_num>")
-def find_by_team(dept_name, reporting_manager_id_num):
-
-    # Check if department exists
-    dept_exists = db.session.query(
-        db.session.query(wfh_requests).filter_by(dept=dept_name).exists()
-    ).scalar()
-
-    if not dept_exists:
-        return jsonify(
-            {
-                "code": 404,
-                "message": f"Department with name:{dept_name} is not found."
-            }
-        ), 404
+@app.route("/wfh_requests/team/<int:reporting_manager_id_num>")
+def find_by_team(reporting_manager_id_num):
 
     # Get all requests for the given team (department and reporting manager)
     team_requests_list = db.session.scalars(
-        db.select(wfh_requests).filter(
-            and_(
-                wfh_requests.reporting_manager == reporting_manager_id_num,
-                wfh_requests.dept == dept_name
-            )
-        )
+        db.select(wfh_requests).filter_by(reporting_manager=reporting_manager_id_num)
     ).all()
 
     # If there are requests, return them
@@ -171,7 +172,7 @@ def find_by_team(dept_name, reporting_manager_id_num):
     return jsonify(
         {
             "code": 404,
-            "message": "No requests from this team or team manager is not found."
+            "message": "No requests from this team is not found."
         }
     ), 404
 
