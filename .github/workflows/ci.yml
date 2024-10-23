@@ -70,13 +70,9 @@ jobs:
       - name: Run tests on Unix-based systems
         if: runner.os != 'Windows'
         run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/apply_wfh  # Unix-based syntax, add path for each new test
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/wfh_request  # Unix-based syntax, add path for each new test
           python -m unittest discover -s Backend/tests
 
       - name: Run tests on Windows
         if: runner.os == 'Windows'
         run: |
-          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\apply_wfh"  # Windows PowerShell syntax, add path for each new test
-          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\wfh_request"  # Windows PowerShell syntax, add path for each new test
           python -m unittest discover -s Backend/tests
