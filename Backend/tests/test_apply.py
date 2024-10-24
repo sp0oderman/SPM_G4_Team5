@@ -1,7 +1,3 @@
-# import sys
-# # Get system path to apply.py microservice
-# sys.path.append('../apply_wfh')
-
 import os
 # Set FLASK_ENV to testing so that apply.py app uses sqlite URI instead of postgres URI
 os.environ['FLASK_ENV'] = 'testing'  # Set the environment to testing
@@ -43,7 +39,7 @@ class BaseTestCase(TestCase):
             Role=3
         )
         
-        team_member = Employee(
+        team_member_1 = Employee(
             Staff_ID=140002, 
             Staff_FName="Jane", 
             Staff_LName="Smith", 
@@ -55,8 +51,21 @@ class BaseTestCase(TestCase):
             Role=2
         )
 
+        team_member_2 = Employee(
+            Staff_ID=140003, 
+            Staff_FName="Bob", 
+            Staff_LName="Johnson", 
+            Dept="Sales", 
+            Position="Sales Associate", 
+            Country="USA", 
+            Email="bob.johnson@example.com", 
+            Reporting_Manager=140001,  # Also reports to John Doe
+            Role=2
+        )
+
         db.session.add(manager)
-        db.session.add(team_member)
+        db.session.add(team_member_1)
+        db.session.add(team_member_2)
         db.session.commit()
 
     def tearDown(self):
@@ -72,7 +81,7 @@ class TestApplyWFH(BaseTestCase):
     def test_apply_wfh_success(self):
         """Test applying for WFH successfully."""
         response = self.client.post('/apply_wfh', json={
-            'staff_id': 140001,
+            'staff_id': 140002,  # Team member applying
             'requested_dates': ['2024-10-10'],
             'time_of_day': 'Full Day',
             'reason': 'Doctor appointment'
@@ -94,7 +103,7 @@ class TestApplyWFH(BaseTestCase):
         """Test approving a WFH request."""
         # Create a WFH request
         wfh_request = WFHRequest(
-            staff_id=140001, 
+            staff_id=140002, 
             requested_dates='2024-10-10', 
             time_of_day='Full Day', 
             reason='Doctor appointment'
@@ -114,7 +123,7 @@ class TestApplyWFH(BaseTestCase):
         """Test rejecting a WFH request."""
         # Create a WFH request
         wfh_request = WFHRequest(
-            staff_id=140001, 
+            staff_id=140002, 
             requested_dates='2024-10-10', 
             time_of_day='Full Day', 
             reason='Doctor appointment'
@@ -129,6 +138,63 @@ class TestApplyWFH(BaseTestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"WFH request rejected successfully!", response.data)
+
+    def test_apply_wfh_blocked_by_50_percent_rule(self):
+        """Test that a WFH application is blocked when more than 50% of the team is already working from home."""
+        # First, approve a WFH request for one team member (50% of the team)
+        wfh_request_1 = WFHRequest(
+            staff_id=140002, 
+            requested_dates='2024-10-10', 
+            time_of_day='Full Day', 
+            reason='Personal'
+        )
+        wfh_request_1.status = 'Approved'
+        db.session.add(wfh_request_1)
+        db.session.commit()
+
+        # Now, try to apply for WFH for another team member on the same date
+        response = self.client.post('/apply_wfh', json={
+            'staff_id': 140003,  # Another team member applying
+            'requested_dates': ['2024-10-10'],
+            'time_of_day': 'Full Day',
+            'reason': 'Doctor appointment'
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"More than 50% of the team is already working from home", response.data)
+
+    def test_approve_wfh_blocked_by_50_percent_rule(self):
+        """Test that a WFH approval is blocked when more than 50% of the team is already working from home."""
+        # Approve a WFH request for one team member (50% of the team)
+        wfh_request_1 = WFHRequest(
+            staff_id=140002, 
+            requested_dates='2024-10-10', 
+            time_of_day='Full Day', 
+            reason='Personal'
+        )
+        wfh_request_1.status = 'Approved'
+        db.session.add(wfh_request_1)
+        db.session.commit()
+
+        # Create another pending WFH request for another team member
+        wfh_request_2 = WFHRequest(
+            staff_id=140003, 
+            requested_dates='2024-10-10', 
+            time_of_day='Full Day', 
+            reason='Doctor appointment'
+        )
+        db.session.add(wfh_request_2)
+        db.session.commit()
+
+        # Try to approve the second WFH request
+        response = self.client.post('/approve_wfh_request', json={
+            'request_id': wfh_request_2.id,
+            'manager_id': 140001
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"More than 50% of the team is already working from home", response.data)
+
 
 if __name__ == '__main__':
     unittest.main()

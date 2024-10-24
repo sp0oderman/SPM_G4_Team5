@@ -69,21 +69,24 @@ class WFHRequest(db.Model):
     # Relationship to access employee details from WFH request
     employee = db.relationship('Employee', backref='wfh_requests')
 
-# Route for Manager to view employees reporting to them
-@app.route('/get_manager_team/<int:manager_id>', methods=['GET'])
-def get_manager_team(manager_id):
-    try:
-        team = Employee.query.filter_by(Reporting_Manager=manager_id).all()
-        team_data = [{
-            'Staff_ID': employee.Staff_ID,
-            'Staff_FName': employee.Staff_FName,
-            'Staff_LName': employee.Staff_LName,
-            'Position': employee.Position
-        } for employee in team]
-        return jsonify(team_data)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
+# Helper function to check if 50% of the team is working from home
+def is_team_limit_reached(manager_id, date):
+    team_size = Employee.query.filter_by(Reporting_Manager=manager_id).count()
+    if team_size == 0:
+        return False  # If no team members, 50% limit is not reached
+
+    # Count how many team members have approved WFH on the given date
+    wfh_count = WFHRequest.query.filter(
+        WFHRequest.staff_id.in_(
+            Employee.query.with_entities(Employee.Staff_ID).filter_by(Reporting_Manager=manager_id)
+        ),
+        WFHRequest.requested_dates.like(f'%{date}%'),
+        WFHRequest.status == 'Approved'
+    ).count()
+
+    # Return True if more than 50% of the team is working from home on that day
+    return (wfh_count / team_size) > 0.5
+
 # Route to apply for WFH arrangement (For Users)
 @app.route('/apply_wfh', methods=['POST'])
 def apply_wfh():
@@ -97,12 +100,23 @@ def apply_wfh():
         if not staff_id or not requested_dates or not time_of_day:
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Check if user has reached the WFH limit or has conflicting dates
-        if not can_apply_wfh(staff_id, requested_dates):
-            return jsonify({"error": "You have reached your WFH limit or have conflicting dates"}), 400
+        # Fetch the employee and their manager
+        employee = Employee.query.filter_by(Staff_ID=staff_id).first()
+        if not employee:
+            return jsonify({"error": "Employee not found"}), 404
+
+        # Check if 50% of the team is already working from home on any requested date
+        for date in requested_dates:
+            if is_team_limit_reached(employee.Reporting_Manager, date):
+                return jsonify({"error": f"More than 50% of the team is already working from home on {date}"}), 400
 
         # Insert the new WFH request
-        new_request = WFHRequest(staff_id=staff_id, requested_dates=','.join(requested_dates), time_of_day=time_of_day, reason=reason)
+        new_request = WFHRequest(
+            staff_id=staff_id,
+            requested_dates=','.join(requested_dates),
+            time_of_day=time_of_day,
+            reason=reason
+        )
         db.session.add(new_request)
         db.session.commit()
 
@@ -110,45 +124,6 @@ def apply_wfh():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# Helper function to check if user can apply for WFH
-def can_apply_wfh(staff_id, requested_dates):
-    # # Retrieve all WFH requests for the staff in the current month
-    # current_month = datetime.now().month
-    # user_requests = WFHRequest.query.filter_by(staff_id=staff_id).all()
-
-    # # Check for conflicts in requested dates
-    # for req in user_requests:
-    #     existing_dates = req.requested_dates.split(',')
-    #     for date in requested_dates:
-    #         if date in existing_dates:
-    #             return False
-    return True
-
-# Route for Manager to view pending WFH requests
-@app.route('/pending_wfh_requests', methods=['GET'])
-def view_pending_wfh_requests():
-    manager_id = request.args.get('manager_id')
-    if not manager_id:
-        return jsonify({"error": "Manager ID is required"}), 400
-
-    # Fetch the manager's team and their pending requests
-    team = Employee.query.filter_by(Reporting_Manager=manager_id).all()
-    team_ids = [emp.Staff_ID for emp in team]
-    pending_requests = WFHRequest.query.filter(WFHRequest.staff_id.in_(team_ids), WFHRequest.status == 'Pending').all()
-
-    requests_data = [
-        {
-            "id": req.id,
-            "staff_id": req.staff_id,
-            "requested_dates": req.requested_dates,
-            "time_of_day": req.time_of_day,
-            "reason": req.reason,
-            "status": req.status
-        } for req in pending_requests
-    ]
-
-    return jsonify(requests_data), 200
 
 # Route for Manager to approve WFH requests
 @app.route('/approve_wfh_request', methods=['POST'])
@@ -165,42 +140,19 @@ def approve_wfh_request():
     # Check the manager's team size
     team_size = Employee.query.filter_by(Reporting_Manager=manager_id).count()
 
-    # Example business logic: enforce 50% team limit
-    wfh_count = WFHRequest.query.filter_by(status='Approved').count()
-    if wfh_count / team_size > 0.5:
-        return jsonify({"error": "More than 50 percent of the team is already working from home"}), 400
+    if team_size == 0:
+        return jsonify({"error": "Manager has no team members"}), 400
+
+    # Check if 50% of the team is already working from home on the requested dates
+    for date in wfh_request.requested_dates.split(','):
+        if is_team_limit_reached(manager_id, date):
+            return jsonify({"error": f"More than 50% of the team is already working from home on {date}"}), 400
 
     # Approve the request if within limits
     wfh_request.status = 'Approved'
     db.session.commit()
     
-    return jsonify({"message": "WFH request approved successfully!"})
-    
-# Route for Manager to reject WFH requests
-@app.route('/reject_wfh_request', methods=['POST'])
-def reject_wfh_request():
-    try:
-        data = request.json
-        request_id = data.get('request_id')
-        rejection_reason = data.get('rejection_reason')
-
-        if not request_id or not rejection_reason:
-            return jsonify({"error": "Request ID and rejection reason are required"}), 400
-
-        # Retrieve the WFH request by ID
-        wfh_request = WFHRequest.query.filter_by(id=request_id, status='Pending').first()
-        if not wfh_request:
-            return jsonify({"error": "No pending WFH request found"}), 404
-
-        # Reject the WFH request
-        wfh_request.status = 'Rejected'
-        wfh_request.reason = rejection_reason
-        db.session.commit()
-
-        return jsonify({"message": "WFH request rejected successfully!"}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"message": "WFH request approved successfully!"}), 200
 
 # Health check route
 @app.route('/health', methods=['GET'])
