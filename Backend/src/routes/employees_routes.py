@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify
-from src.services.employees_services import Employees_Service
 from src.utils.hr_auth import hr_required
 
 # Create a blueprint for wfh_requests_routes

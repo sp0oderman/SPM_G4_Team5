@@ -7,8 +7,11 @@ load_dotenv()
 class Config:
     # Common settings
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    SESSION_TYPE = 'filesystem'  # Or any other type supported by Flask-Session
 
 class DevelopmentConfig(Config):
+
     DEBUG = True
 
     POSTGRES_USER = os.getenv('POSTGRES_USER')
@@ -19,6 +22,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
 
 class ProductionConfig(Config):
+
     DEBUG = False
 
     POSTGRES_USER = os.getenv('POSTGRES_USER')

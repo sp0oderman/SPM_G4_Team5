@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request
-from src.services.wfh_requests_services import WFH_Requests_Service
 
 # Create a blueprint for wfh_requests_routes
 def create_wfh_requests_blueprint(wfh_requests_service):
