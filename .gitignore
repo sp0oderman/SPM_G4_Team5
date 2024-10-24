@@ -2,3 +2,4 @@
 .log
 .pyc
 flask_session/
+__pycache__/
