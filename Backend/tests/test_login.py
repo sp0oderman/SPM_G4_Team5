@@ -1,56 +1,66 @@
-import unittest
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 import sys
 import os
 
-# Import employee
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'employee')))
-from employee import app, db, employees
+# Add the root directory (where the `src` directory is located) to the system path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-class LoginTestCase(unittest.TestCase):
+import unittest
+from flask_testing import TestCase
+
+from src.models.employees import Employees
+from src.models.wfh_requests import WFH_Requests
+from src.__init__ import db, create_app
+from config import TestingConfig
+
+class BaseTestCase(TestCase):
+    """Base test case to set up the Flask test client and the database."""
+    
+    def create_app(self):
+        """Configure the app for testing with an in-memory SQLite database."""
+        app = create_app(config_class=TestingConfig)
+        return app
+
     def setUp(self):
-        """Set up test client and initialize database."""
-        self.app = app
-        self.client = self.app.test_client()
-        self.app.config['TESTING'] = True
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+        """Set up the database and create the tables before each test."""
         with self.app.app_context():
-            db.create_all()
-            # Add test employee to the database
-            test_employee = employees(
-                staff_id=130002,
-                staff_fname='Jack',
-                staff_lname='Sim',
-                dept='CEO',
-                position='MD',
-                country='Singapore',
-                email='jack.sim@allinone.com.sg',
-                reporting_manager=None,
-                role='1'
-            )
-            db.session.add(test_employee)
-            db.session.commit()
+            db.create_all()  # Ensure tables are created before adding data
+
+        # Add a manager (John Doe) and a team member reporting to the manager
+        manager = Employees(
+            staff_id=140001, 
+            staff_fname="John", 
+            staff_lname="Doe", 
+            dept="Sales", 
+            position="Manager", 
+            country="USA", 
+            email="john.doe@example.com", 
+            reporting_manager=None,
+            role=3
+        )
+
+        db.session.add(manager)
+        db.session.commit()
 
     def tearDown(self):
-        """Tear down database."""
+        """Destroy the database after each test."""
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
 
+# Unit Test Cases         
+class LoginTestCase(BaseTestCase):
+
     def test_login_success(self):
         """Test login functionality for existing employee."""
-        response = self.client.get('/employees/auth/jack.sim@allinone.com.sg')
+        response = self.client.get('/employees/staff/email/john.doe@example.com')
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertEqual(data['code'], 200)
-        self.assertEqual(data['data']['email'], 'jack.sim@allinone.com.sg')
+        self.assertEqual(data['data']['email'], 'john.doe@example.com')
 
     def test_login_failure(self):
         """Test login functionality for nonexistent employee."""
-        response = self.client.get('/employees/auth/nonexistent@example.com')
+        response = self.client.get('/employees/staff/email/nonexistent@example.com')
         self.assertEqual(response.status_code, 404)
         data = response.get_json()
         self.assertEqual(data['code'], 404)
