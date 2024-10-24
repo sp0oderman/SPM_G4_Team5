@@ -278,23 +278,23 @@ function makeAuthenticatedRequest(url) {
 }
 
     document.getElementById('getAllEmployees').addEventListener('click', function() {
-        makeAuthenticatedRequest('/get_employees');
+        makeAuthenticatedRequest('/employees/');
     });
 
     document.getElementById('getAllWFHRequests').addEventListener('click', function() {
-        makeAuthenticatedRequest('/get_wfh_requests');
+        makeAuthenticatedRequest('/wfh_requests/');
     });
 
     document.getElementById('getStaffSchedule').addEventListener('click', function() {
         let staffId = document.getElementById('staffId').value;
-        makeAuthenticatedRequest(`/get_staff_schedule/${staffId}`);
+        makeAuthenticatedRequest(`/wfh_requests/staff_id/${staffId}`);
     });
 
     document.getElementById('getTeamSchedule').addEventListener('click', function() {
         let reportingManager = document.getElementById('reportingManager').value;
         let department = document.getElementById('departmentSelect').value;
 
-        makeAuthenticatedRequest(`/get_team_schedule/${reportingManager}?department=${department}`)
+        makeAuthenticatedRequest(`/wfh_requests/team/${reportingManager}`)
             .then(result => {
                 if (result.success) {
                     if (result.data.code === 200) {
@@ -319,7 +319,7 @@ function makeAuthenticatedRequest(url) {
 
     // Modify the populateDepartments function
     function populateDepartments() {
-        makeAuthenticatedRequest('/get_departments')
+        makeAuthenticatedRequest('/employees/dept_list')
             .then(result => {
                 if (result.success && result.data.code === 200) {
                     const departments = result.data.data.departments;

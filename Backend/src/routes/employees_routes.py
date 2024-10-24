@@ -29,7 +29,7 @@ def create_employees_blueprint(employees_service):
         ), 404
 
     # Get all departments from employees database model
-    @employees_blueprint.route('/dept', methods=['GET'])
+    @employees_blueprint.route('/dept_list', methods=['GET'])
     def get_list_of_departments():
         departments_list = employees_service.get_departments_list()
 
