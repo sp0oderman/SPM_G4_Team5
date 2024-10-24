@@ -15,7 +15,8 @@ def create_user_accounts_blueprint(user_accounts_service, employees_service):
             response, status_code = user_accounts_service.login(username, password)
 
             if status_code == 200:
-                return redirect(url_for('index'))
+                session['user'] = response['user']
+                return redirect(url_for('user_accounts_blueprint.display_index_page'))
             elif status_code == 404:
                 return render_template('login.html', error=response['message'])
             elif status_code == 401:
@@ -30,15 +31,15 @@ def create_user_accounts_blueprint(user_accounts_service, employees_service):
         session.clear()
 
         # Redirect to login page
-        return redirect(url_for('login'))
+        return redirect(url_for('user_accounts_blueprint.login_to_wfh_system'))
     
     # Get index page of system (the calendar with wfh_request functionality page)
     @user_accounts_blueprint.route('/index', methods=['GET'])
     def display_index_page():
-        
+
         # Check if user is in session, else redirect to login page
         if 'user' not in session:
-            return redirect(url_for('login'))
+            return redirect(url_for('user_accounts_blueprint.login_to_wfh_system'))
 
         # Get user data in "user" variable
         user = session['user']
@@ -47,13 +48,14 @@ def create_user_accounts_blueprint(user_accounts_service, employees_service):
         employee = employees_service.find_by_staff_id(user['staff_id'])
 
         if employee:
-            user['reporting_manager'] = employee['reporting_manager']
-            user['dept'] = employee['dept']
+            user['reporting_manager'] = employee.reporting_manager
+            user['dept'] = employee.dept
         else:
             user['reporting_manager'] = None
             user['dept'] = None
 
         session['user'] = user
+
         return render_template('index.html', user=user)
 
     

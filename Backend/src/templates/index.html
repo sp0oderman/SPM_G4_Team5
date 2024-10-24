@@ -109,7 +109,7 @@
         <div class="user-info">
             <span>Welcome, {{ user.staff_fname }} {{ user.staff_lname }}</span>
             <span id="staffIdLabel" class="ms-3">Staff ID: {{ user.staff_id }}</span>
-            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+            <a href="{{ url_for('user_accounts_blueprint.logout_of_wfh_system') }}" class="logout-btn">Logout</a>
         </div>
     </div>
 

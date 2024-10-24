@@ -11,7 +11,7 @@ class User_Accounts_Service:
         if user and user.password_hash == password:  # Note: In a real app, use proper password hashing
 
             # Check if staff_id is present in employees table 
-            employee = Employees.query.filter_by(staff_id=user.staff_id).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=user.staff_id).first()
 
             if employee:
                 return {

@@ -9,3 +9,21 @@ class User_Accounts(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     last_login = db.Column(db.DateTime)
     role = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, login_id, staff_id, username, password_hash, last_login, role):
+        self.login_id = login_id
+        self.staff_id = staff_id
+        self.username = username
+        self.password_hash = password_hash
+        self.last_login = last_login
+        self.role = role
+
+    def json(self):
+        return {
+                "login_id": self.login_id,
+                "staff_id": self.staff_id,
+                "username": self.username,
+                "password_hash": self.password_hash,
+                "last_login": self.last_login,
+                "role": self.role
+            }
