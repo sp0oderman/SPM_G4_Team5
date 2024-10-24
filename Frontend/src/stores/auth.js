@@ -9,7 +9,8 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async authenticate(email) {
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/employees/auth/${email}`);
+        const response = await axios.get(`http://127.0.0.1:5000/employees/staff/email/${email}`);
+        // const response = await axios.get(`http://127.0.0.1:5000/employees/auth/${email}`);
         if (response.data.code === 200) {
           this.user = response.data.data;
           this.error = null;

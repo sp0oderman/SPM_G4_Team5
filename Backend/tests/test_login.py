@@ -21,15 +21,15 @@ class LoginTestCase(unittest.TestCase):
             db.create_all()
             # Add test employee to the database
             test_employee = employees(
-                staff_id=1,
-                staff_fname='John',
-                staff_lname='Doe',
-                dept='IT',
-                position='Developer',
-                country='USA',
-                email='john.doe@example.com',
+                staff_id=130002,
+                staff_fname='Jack',
+                staff_lname='Sim',
+                dept='CEO',
+                position='MD',
+                country='Singapore',
+                email='jack.sim@allinone.com.sg',
                 reporting_manager=None,
-                role='2'
+                role='1'
             )
             db.session.add(test_employee)
             db.session.commit()
@@ -42,14 +42,14 @@ class LoginTestCase(unittest.TestCase):
 
     def test_login_success(self):
         """Test login functionality for existing employee."""
-        response = self.client.get('/employees/auth/john.doe@example.com')
+        response = self.client.get('/employees/auth/jack.sim@allinone.com.sg')
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertEqual(data['code'], 200)
-        self.assertEqual(data['data']['email'], 'john.doe@example.com')
+        self.assertEqual(data['data']['email'], 'jack.sim@allinone.com.sg')
 
     def test_login_failure(self):
-        """Test login functionality for non-existing employee."""
+        """Test login functionality for nonexistent employee."""
         response = self.client.get('/employees/auth/nonexistent@example.com')
         self.assertEqual(response.status_code, 404)
         data = response.get_json()

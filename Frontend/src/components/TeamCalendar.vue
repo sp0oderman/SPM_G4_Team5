@@ -3,10 +3,10 @@
 </template>
 
 <script>
-import FullCalendar from '@fullcalendar/vue3'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import interactionPlugin from '@fullcalendar/interaction'
-import axios from 'axios'
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
 export default {
@@ -14,35 +14,49 @@ export default {
     FullCalendar
   },
   data() {
-    // Calculate date ranges based on customer requirement
-    // -2 months from today
-    // +3 months from today
     const today = new Date();
     const startDate = new Date(today);
     startDate.setMonth(today.getMonth() - 2);
     const endDate = new Date(today);
     endDate.setMonth(today.getMonth() + 3);
-
-    // Adjusting to the end of the month for the endDate
-    endDate.setDate(new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate());
+    endDate.setDate(today.getDate() + 1);
 
     return {
       calendarOptions: {
-        plugins: [ dayGridPlugin, interactionPlugin ],
+        plugins: [dayGridPlugin, interactionPlugin],
         initialView: 'dayGridMonth',
         dateClick: this.handleDateClick,
-        // TODO: List out team calendar with existing WFH applications
-        events: [
-          { title: 'Test event', date: '2024-10-01' },
-        ],
+        events: [],
         validRange: {
           start: startDate.toISOString().split('T')[0],
           end: endDate.toISOString().split('T')[0]
         }
       }
-    }
+    };
   },
   methods: {
+    async loadTeamSchedule() {
+      try {
+        const user = useAuthStore().getUser;
+        const response = await axios.get(`http://127.0.0.1:5000/wfh_requests/team/${user.reporting_manager}`);
+        
+        if (response.data.code === 200) {
+          const events = response.data.data.team_requests.map(request => ({
+            title: `WFH: ${request.staff_fname}`,
+            date: request.chosen_date,
+          }));
+
+          this.calendarOptions.events = events;
+        } else {
+          console.error('No WFH requests found for the team.');
+        }
+      } catch (error) {
+        console.error('Error fetching team WFH schedule:', error);
+      }
+    },
+  },
+  async mounted() {
+    await this.loadTeamSchedule();
   }
-}
+};
 </script>

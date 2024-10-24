@@ -61,7 +61,7 @@ export default {
 
       try {
         //Modify link accordingly
-        const response = await axios.post('http://192.168.10.106:5000/apply_wfh', payload);
+        const response = await axios.post('http://127.0.0.1:5000/wfh_requests/apply_wfh', payload);
         if (response.status === 200) {
           console.log("successfully applied")
         } 
@@ -72,7 +72,30 @@ export default {
       catch (error) {
         console.log("failed to apply")
       }
-    }
+    },
+    
+    async loadSchedule() {
+      try {
+        const user = useAuthStore().getUser;
+        const response = await axios.get(`/wfh_requests/staff_id/${user.staff_id}`);
+        
+        if (response.data.code === 200) {
+          const events = response.data.data.team_requests.map(request => ({
+            title: `WFH`,
+            date: request.chosen_date,
+          }));
+
+          this.calendarOptions.events = events;
+        } else {
+          console.error('No WFH requests found for the user.');
+        }
+      } catch (error) {
+        console.error('Error fetching WFH schedule:', error);
+      }
+    },
+  },
+  async mounted() {
+    await this.loadSchedule();
   }
 }
 </script>

@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+from flask_cors import CORS
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -12,6 +13,7 @@ def create_app(config_class):
     
     # Load configuration
     app.config.from_object(config_class)
+    CORS(app)
     
     # Initialize extensions
     db.init_app(app)
