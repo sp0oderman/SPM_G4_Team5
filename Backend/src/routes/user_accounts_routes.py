@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
+from flask import Blueprint, request, render_template, redirect, url_for, session
 
 # Create a blueprint for user_accounts_routes
 def create_user_accounts_blueprint(user_accounts_service, employees_service):
