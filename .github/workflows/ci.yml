@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v3  # Use the checkout action to get the repository code
 
       # Step 2: Set up the Python environment
-      # This step installs the specific version of Python defined in the matrix (3.7 to 3.12-dev)
+      # This step installs the specific version of Python defined in the matrix (3.10 to 3.12-dev)
       - name: Set up Python
         uses: actions/setup-python@v4  # Use the setup-python action to set up the Python environment
         with:
@@ -70,13 +70,9 @@ jobs:
       - name: Run tests on Unix-based systems
         if: runner.os != 'Windows'
         run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/apply_wfh  # Unix-based syntax, add path for each new test
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/wfh_request  # Unix-based syntax, add path for each new test
           python -m unittest discover -s Backend/tests
 
       - name: Run tests on Windows
         if: runner.os == 'Windows'
         run: |
-          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\apply_wfh"  # Windows PowerShell syntax, add path for each new test
-          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\wfh_request"  # Windows PowerShell syntax, add path for each new test
           python -m unittest discover -s Backend/tests
