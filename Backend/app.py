@@ -7,7 +7,7 @@ CORS(app)
 
 @app.route('/api/homepage')
 def homepage():
-    return {"message": "Homepage of flask app!"}
+    return {"message": "Homepage of flask app! Continuous Delivery Check!"}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
