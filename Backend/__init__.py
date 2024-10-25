@@ -16,20 +16,9 @@ def create_app(config_class):
     
     # Load configuration
     app.config.from_object(config_class)
-    
-    #---------------------------------------------
-    # Retrieve the database URL from the environment
-    database_url = os.getenv("DATABASE_URL")
-    print("DATABASE_URL:", database_url)  # Print the database URL
-
-    if not database_url:
-        print("Error: No DATABASE_URL environment variable set")
-        raise ValueError("No DATABASE_URL environment variable set")
-    #---------------------------------------------
 
     # Initialize extensions
-    db.init_app(app)
-    print("Database initialized")  # Confirm database initialization
+    db.init_app(app)    
     session.init_app(app)
 
     from src.services.employees_services import Employees_Service

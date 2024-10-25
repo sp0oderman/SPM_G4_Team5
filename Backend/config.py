@@ -14,23 +14,27 @@ class DevelopmentConfig(Config):
 
     DEBUG = True
 
-    POSTGRES_USER = os.getenv('POSTGRES_USER')
-    POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-    POSTGRES_HOST = os.getenv('POSTGRES_HOST')
-    POSTGRES_DB = os.getenv('POSTGRES_DB')
+    # POSTGRES_USER = os.getenv('POSTGRES_USER')
+    # POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+    # POSTGRES_HOST = os.getenv('POSTGRES_HOST')
+    # POSTGRES_DB = os.getenv('POSTGRES_DB')
 
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
+    # SQLALCHEMY_DATABASE_URI = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
+
+    SQLALCHEMY_DATABASE_URI = os.getenv('DB_URI')
 
 class ProductionConfig(Config):
 
     DEBUG = False
 
-    POSTGRES_USER = os.getenv('POSTGRES_USER')
-    POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-    POSTGRES_HOST = os.getenv('POSTGRES_HOST')
-    POSTGRES_DB = os.getenv('POSTGRES_DB')
+    # POSTGRES_USER = os.getenv('POSTGRES_USER')
+    # POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+    # POSTGRES_HOST = os.getenv('POSTGRES_HOST')
+    # POSTGRES_DB = os.getenv('POSTGRES_DB')
     
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
+    # SQLALCHEMY_DATABASE_URI = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
+
+    SQLALCHEMY_DATABASE_URI = os.getenv('DB_URI')
 
 class TestingConfig(Config):
     TESTING = True
