@@ -2,6 +2,10 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # Initialize extensions
 db = SQLAlchemy()
 session = Session()
@@ -12,9 +16,9 @@ def create_app(config_class):
     
     # Load configuration
     app.config.from_object(config_class)
-    
+
     # Initialize extensions
-    db.init_app(app)
+    db.init_app(app)    
     session.init_app(app)
 
     from src.services.employees_services import Employees_Service
