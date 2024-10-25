@@ -1,6 +1,7 @@
 # Name of the GitHub Actions workflow
 name: CI
 
+# commnet to remove 
 # Define when this workflow should run. It will trigger on:
 # - Any push to any branch
 # - Any pull request to any branch
@@ -22,8 +23,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version:
-          - "3.8"
-          - "3.9"
           - "3.10"
           - "3.11"
           - "3.12-dev"
@@ -71,11 +70,13 @@ jobs:
       - name: Run tests on Unix-based systems
         if: runner.os != 'Windows'
         run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/apply_wfh  # Unix-based syntax
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/apply_wfh  # Unix-based syntax, add path for each new test
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/Backend/wfh_request  # Unix-based syntax, add path for each new test
           python -m unittest discover -s Backend/tests
 
       - name: Run tests on Windows
         if: runner.os == 'Windows'
         run: |
-          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\apply_wfh"  # Windows PowerShell syntax
+          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\apply_wfh"  # Windows PowerShell syntax, add path for each new test
+          $env:PYTHONPATH="$env:PYTHONPATH;$(pwd)\Backend\wfh_request"  # Windows PowerShell syntax, add path for each new test
           python -m unittest discover -s Backend/tests
