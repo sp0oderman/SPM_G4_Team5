@@ -1,4 +1,4 @@
-from src.__init__ import db
+from __init__ import db
 
 class Employees(db.Model):
     __tablename__ = 'employees'
