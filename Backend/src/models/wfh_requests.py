@@ -1,4 +1,4 @@
-from src.__init__ import db
+from __init__ import db
 
 class WFH_Requests(db.Model):
     __tablename__ = 'wfh_requests'
