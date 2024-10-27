@@ -8,6 +8,7 @@ import unittest
 from flask_testing import TestCase
 
 from src.models.wfh_requests import WFH_Requests
+from src.models.employees import Employees
 from __init__ import db, create_app
 from config import TestingConfig
 
@@ -23,6 +24,32 @@ class BaseTestCase(TestCase):
         """Set up the database and create the tables before each test."""
         with self.app.app_context():
             db.create_all()  # Ensure tables are created before adding data
+
+        # Add a reporting manager
+        reportingManager = Employees(
+            staff_id = 140894,
+            staff_fname = "managerfname",
+            staff_lname = "managerlname",
+            dept = "Sales",
+            position = "Sales Manager",
+            country = "Singapore",
+            email = "jakob.lie.2022@smu.edu.sg",
+            reporting_manager = 140001,
+            role = 3
+        )
+
+        # Add employee who reports to RM
+        employee = Employees(
+            staff_id = 140002,
+            staff_fname = "empfname",
+            staff_lname = "emplname",
+            dept = "Sales",
+            position = "Account Manager",
+            country = "Singapore",
+            email = "sthauheed.2022@smu.edu.sg",
+            reporting_manager = 140894,
+            role = 2
+        )
 
         # Add a pending request 
         pendingRequest = WFH_Requests(
@@ -48,6 +75,8 @@ class BaseTestCase(TestCase):
             remarks = "I am a pending request"
         )
 
+        db.session.add(reportingManager)
+        db.session.add(employee)
         db.session.add(pendingRequest)
         db.session.add(approvedRequest)
         db.session.commit()

@@ -51,7 +51,7 @@ def create_wfh_requests_blueprint(wfh_requests_service):
         
         # Call the service function
         response, status_code = wfh_requests_service.apply_wfh(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks)
-        
+
         # Return the response from the service
         return jsonify(response), status_code
 

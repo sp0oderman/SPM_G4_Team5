@@ -25,33 +25,34 @@ class BaseTestCase(TestCase):
         with self.app.app_context():
             db.create_all()  # Ensure tables are created before adding data
 
-        # Add a manager (John Doe) and a team member reporting to the manager
-        manager = Employees(
-            staff_id=140001, 
-            staff_fname="John", 
-            staff_lname="Doe", 
-            dept="Sales", 
-            position="Manager", 
-            country="USA", 
-            email="john.doe@example.com", 
-            reporting_manager=None,
-            role=3
-        )
-        
-        team_member = Employees(
-            staff_id=140002, 
-            staff_fname="Jane", 
-            staff_lname="Smith", 
-            dept="Sales", 
-            position="Sales Associate", 
-            country="USA", 
-            email="jane.smith@example.com", 
-            reporting_manager=140001,  # Reports to John Doe
-            role=2
+        # Add a reporting manager
+        reportingManager = Employees(
+            staff_id = 140894,
+            staff_fname = "managerfname",
+            staff_lname = "managerlname",
+            dept = "Sales",
+            position = "Sales Manager",
+            country = "Singapore",
+            email = "jakob.lie.2022@smu.edu.sg",
+            reporting_manager = 140001,
+            role = 3
         )
 
-        db.session.add(manager)
-        db.session.add(team_member)
+        # Add an employee who reports to RM
+        employee = Employees(
+            staff_id = 140002,
+            staff_fname = "empfname",
+            staff_lname = "emplname",
+            dept = "Sales",
+            position = "Account Manager",
+            country = "Singapore",
+            email = "sthauheed.2022@smu.edu.sg",
+            reporting_manager = 140894,
+            role = 2
+        )
+
+        db.session.add(reportingManager)
+        db.session.add(employee)
         db.session.commit()
 
     def tearDown(self):
@@ -67,8 +68,8 @@ class TestApplyWFH(BaseTestCase):
     def test_apply_wfh_success(self):
         """Test applying for WFH successfully."""
         response = self.client.post('/wfh_requests/apply_wfh', json={
-            'staff_id': 140001,
-            'reporting_manager': 130002,
+            'staff_id': 140002,
+            'reporting_manager': 140894,
             'dept': 'Sales',
             'chosen_date': '2024-10-10',
             'arrangement_type': 'Full Day',
@@ -82,7 +83,7 @@ class TestApplyWFH(BaseTestCase):
     def test_apply_wfh_missing_fields(self):
         """Test WFH application with missing required fields."""
         response = self.client.post('/wfh_requests/apply_wfh', json={
-            'staff_id': 140001,
+            'staff_id': 140002,
             'requested_dates': '',  # Missing required requested dates
             'time_of_day': 'Full Day'
         })
@@ -93,8 +94,8 @@ class TestApplyWFH(BaseTestCase):
         """Test approving a WFH request."""
         # Create a WFH request
         wfh_request = WFH_Requests(
-            staff_id=140001, 
-            reporting_manager=130002,
+            staff_id=140002, 
+            reporting_manager=140894,
             dept='Sales',
             chosen_date='2024-10-10', 
             arrangement_type='Full Day', 
@@ -117,8 +118,8 @@ class TestApplyWFH(BaseTestCase):
         """Test rejecting a WFH request."""
         # Create a WFH request
         wfh_request = WFH_Requests(
-            staff_id=140001, 
-            reporting_manager=130002,
+            staff_id=140002, 
+            reporting_manager=140894,
             dept='Sales',
             chosen_date='2024-10-10', 
             arrangement_type='Full Day', 
