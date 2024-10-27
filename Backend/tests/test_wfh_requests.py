@@ -8,7 +8,7 @@ import unittest
 from flask_testing import TestCase
 
 from src.models.wfh_requests import WFH_Requests
-from src.__init__ import db, create_app
+from __init__ import db, create_app
 from config import TestingConfig
 
 class BaseTestCase(TestCase):
