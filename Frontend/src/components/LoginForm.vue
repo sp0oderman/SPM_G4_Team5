@@ -10,7 +10,7 @@
           <v-row class="mt-3" justify="center">
             <v-col cols="auto">
               <v-btn color="primary" @click="login">
-                Login
+                WFH System Login
               </v-btn>
             </v-col>
           </v-row>
