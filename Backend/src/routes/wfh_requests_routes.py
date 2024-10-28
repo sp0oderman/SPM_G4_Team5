@@ -96,9 +96,9 @@ def create_wfh_requests_blueprint(wfh_requests_service):
     # JAKOB'S ROUTES
 
     # Get all wfh_requests from wfh_requests table
-    @wfh_requests_blueprint.route('/', methods=['GET'])
-    def get_all_wfh_requests():
-        wfh_requests_list = wfh_requests_service.get_all()
+    @wfh_requests_blueprint.route('/<string:status>', methods=['GET'])
+    def get_all_wfh_requests(status):
+        wfh_requests_list = wfh_requests_service.get_all(status)
 
         if len(wfh_requests_list):
             return jsonify(
@@ -119,7 +119,7 @@ def create_wfh_requests_blueprint(wfh_requests_service):
     # Get wfh_request with specific request_id_num from wfh_requests table
     @wfh_requests_blueprint.route('/request_id/<int:request_id_num>', methods=['GET'])
     def get_wfh_request_by_request_id(request_id_num):
-        wfh_request = wfh_requests_service.find_by_request_id(request_id_num)
+        wfh_request = wfh_requests_service.find_by_request_id(request_id_num, status)
 
         if wfh_request:
             return jsonify(        
