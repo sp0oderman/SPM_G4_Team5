@@ -2,7 +2,7 @@ import sys
 import os
 
 # Add the root directory (where the `src` directory is located) to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 import unittest
 from flask_testing import TestCase
