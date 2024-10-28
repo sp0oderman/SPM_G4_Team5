@@ -119,7 +119,7 @@ def create_wfh_requests_blueprint(wfh_requests_service):
     # Get wfh_request with specific request_id_num from wfh_requests table
     @wfh_requests_blueprint.route('/request_id/<int:request_id_num>', methods=['GET'])
     def get_wfh_request_by_request_id(request_id_num):
-        wfh_request = wfh_requests_service.find_by_request_id(request_id_num, status)
+        wfh_request = wfh_requests_service.find_by_request_id(request_id_num)
 
         if wfh_request:
             return jsonify(        

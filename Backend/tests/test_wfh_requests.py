@@ -93,7 +93,7 @@ class TestWFHRequests(BaseTestCase):
 
     def test_get_all_requests(self):
         """Test retrieving all WFH requests."""
-        response = self.client.get('/wfh_requests/')
+        response = self.client.get('/wfh_requests/All')
         self.assertEqual(response.status_code, 200)
 
     def test_get_all_requests_empty(self):
@@ -102,7 +102,7 @@ class TestWFHRequests(BaseTestCase):
         with self.app.app_context():
             db.session.query(WFH_Requests).delete()
             db.session.commit()
-        response = self.client.get('/wfh_requests/')
+        response = self.client.get('/wfh_requests/All')
         self.assertEqual(response.status_code, 404)
         self.assertIn(b"There are no work-from-home requests.", response.data)
 
