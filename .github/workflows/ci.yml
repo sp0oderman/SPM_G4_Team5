@@ -68,9 +68,9 @@ jobs:
       - name: Run tests on Unix-based systems
         if: runner.os != 'Windows'
         run: |
-          python -m unittest discover -s Backend/tests
+          python -m unittest discover -s Backend/tests/integration_tests
 
       - name: Run tests on Windows
         if: runner.os == 'Windows'
         run: |
-          python -m unittest discover -s Backend/tests
+          python -m unittest discover -s Backend/tests/integration_tests
