@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 # Create a blueprint for wfh_requests_routes
-def create_wfh_requests_blueprint(wfh_requests_service):
+def create_wfh_requests_blueprint(employees_service, wfh_requests_service, user_accounts_service):
     wfh_requests_blueprint = Blueprint('wfh_requests_blueprint', __name__)
 
     # WUHAO'S ROUTES
@@ -160,7 +160,9 @@ def create_wfh_requests_blueprint(wfh_requests_service):
     # Get all wfh_requests from specific team by reporting_manager_id_num from wfh_requests table
     @wfh_requests_blueprint.route("/team/<int:reporting_manager_id_num>", methods=['GET'])
     def get_wfh_requests_by_team(reporting_manager_id_num):
-        team_requests_list = wfh_requests_service.find_by_team(reporting_manager_id_num)
+        # Get all subordinates of the reporting_manager recursively (subordinates of manager who reports to this manager also shown)
+        subordinates_list = employees_service.get_all_subordinates(reporting_manager_id_num, None)
+        team_requests_list = wfh_requests_service.find_by_employees(subordinates_list)
 
         if len(team_requests_list) > 0:
             return jsonify(
