@@ -1,23 +1,21 @@
 <template>
   <FullCalendar :options="calendarOptions" />
   <ApplyWFHPrompt ref="applyWFHPrompt" @submit="handleSubmit" />
+  <WithdrawWFHDialog ref="withdrawWFHDialog" @wfh-withdrawn="loadSchedule" />
 </template>
 
 <script>
-import FullCalendar from '@fullcalendar/vue3'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import interactionPlugin from '@fullcalendar/interaction'
-import axios from 'axios'
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
 export default {
   components: {
-    FullCalendar
+    FullCalendar,
   },
   data() {
-    // Calculate date ranges based on customer requirement
-    // -2 months from today
-    // +3 months from today
     const today = new Date();
     const startDate = new Date(today);
     startDate.setMonth(today.getMonth() - 2);
@@ -27,64 +25,68 @@ export default {
 
     return {
       calendarOptions: {
-        plugins: [ dayGridPlugin, interactionPlugin ],
+        plugins: [dayGridPlugin, interactionPlugin],
         initialView: 'dayGridMonth',
         dateClick: this.handleDateClick,
-        // TODO: List out personal calendar with existing WFH applications
-        events: [
-          { title: 'Test event', date: '2024-10-01' },
-        ],
+        eventClick: this.handleEventClick,
+        events: [],
         validRange: {
           start: startDate.toISOString().split('T')[0],
-          end: endDate.toISOString().split('T')[0]
-        }
-      }
-    }
+          end: endDate.toISOString().split('T')[0],
+        },
+      },
+    };
   },
   methods: {
     handleDateClick(arg) {
       this.$refs.applyWFHPrompt.open(arg.dateStr);
     },
 
-    async handleSubmit(data) {
-      console.log('Selected date:', data.date);
-      console.log('Selected option:', data.option);
-      console.log('Comment:', data.comment);
-      console.log('id:', useAuthStore().getUser.staff_id);
+    handleEventClick(info) {
+      const eventObj = info.event;
+      if (eventObj.extendedProps.requestId) {
+        // Open the withdraw dialog with the request date and ID
+        this.$refs.withdrawWFHDialog.open({
+          date: eventObj.start.toISOString().split('T')[0],
+          requestId: eventObj.extendedProps.requestId,
+        });
+      } else {
+        alert('Event cannot be withdrawn.');
+      }
+    },
 
+    async handleSubmit(data) {
+      const user = useAuthStore().getUser;
       const payload = {
-        staff_id: useAuthStore().getUser.staff_id,
-        requested_dates: [data.date],
-        time_of_day: data.option,
-        reason: data.comment
+        staff_id: user.staff_id,
+        reporting_manager: user.reporting_manager,
+        dept: user.dept,
+        chosen_date: data.date,
+        arrangement_type: data.option,
+        request_datetime: new Date().toISOString(),
+        status: 'Pending',
+        remarks: data.comment,
       };
 
       try {
-        //Modify link accordingly
-        const response = await axios.post('http://127.0.0.1:5000/wfh_requests/apply_wfh', payload);
-        if (response.status === 200) {
-          console.log("successfully applied")
-        } 
-        else {
-          console.log("failed to apply")
-        }
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/apply_wfh`, payload);
+        console.log(response.status === 200 ? 'successfully applied' : 'failed to apply');
       } 
       catch (error) {
-        console.log("failed to apply")
+        console.log('failed to apply');
       }
     },
-    
+
     async loadSchedule() {
       try {
         const user = useAuthStore().getUser;
-        const response = await axios.get(`/wfh_requests/staff_id/${user.staff_id}`);
-        
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/staff_id/${user.staff_id}`);
         if (response.data.code === 200) {
-          const events = response.data.data.team_requests.map(request => ({
-            title: `WFH`,
-            date: request.chosen_date,
+          const events = response.data.data.requests.map(request => ({
+            title: `${request.status}, ${request.arrangement_type}`,
+            date: new Date(request.chosen_date).toISOString().split('T')[0],
+            extendedProps: { requestId: request.request_id },
           }));
-
           this.calendarOptions.events = events;
         } else {
           console.error('No WFH requests found for the user.');
@@ -96,6 +98,6 @@ export default {
   },
   async mounted() {
     await this.loadSchedule();
-  }
-}
+  },
+};
 </script>

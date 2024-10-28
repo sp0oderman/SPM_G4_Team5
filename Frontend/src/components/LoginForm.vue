@@ -43,14 +43,14 @@ export default {
       await authStore.authenticate(this.email);
       if (authStore.user) {
         if (useAuthStore().getUser.role === 1) {
-          this.$router.push({ name: '/manager/Schedule' });
+          this.$router.push({ name: '/hr/OverallSchedule' });
         }
         else if (useAuthStore().getUser.role === 2) {
           this.$router.push({ name: '/staff/Schedule' });
         }
 
         else if (useAuthStore().getUser.role === 3) {
-          this.$router.push({ name: '/hr/Schedule' });
+          this.$router.push({ name: '/manager/TeamSchedule' });
         }
       } 
       else {

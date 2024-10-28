@@ -1,6 +1,6 @@
 <template>
-    <MenuBar/>
-    <Calendar/>
+    <HRMenuBar/>
+    <HRCalendar/>
 </template>
   
 <script>

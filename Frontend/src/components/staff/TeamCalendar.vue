@@ -38,19 +38,22 @@ export default {
     async loadTeamSchedule() {
       try {
         const user = useAuthStore().getUser;
-        const response = await axios.get(`http://127.0.0.1:5000/wfh_requests/team/${user.reporting_manager}`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/team/${user.reporting_manager}`);
         
         if (response.data.code === 200) {
           const events = response.data.data.team_requests.map(request => ({
-            title: `WFH: ${request.staff_fname}`,
-            date: request.chosen_date,
+            title: `WFH: ${request.staff_id}`,
+            date: new Date(request.chosen_date).toISOString().split('T')[0],
           }));
 
           this.calendarOptions.events = events;
-        } else {
+
+          if (events.length === 0) {
           console.error('No WFH requests found for the team.');
-        }
-      } catch (error) {
+          }
+        } 
+      } 
+      catch (error) {
         console.error('Error fetching team WFH schedule:', error);
       }
     },

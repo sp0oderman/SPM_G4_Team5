@@ -1,6 +1,6 @@
 <template>
-    <MenuBar/>
-    <TeamCalendar/>
+    <ManagerMenuBar/>
+    <ManagerCalendar/>
 </template>
   
 <script>
