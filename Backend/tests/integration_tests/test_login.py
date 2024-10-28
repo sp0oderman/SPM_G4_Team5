@@ -2,14 +2,13 @@ import sys
 import os
 
 # Add the root directory (where the `src` directory is located) to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 import unittest
 from flask_testing import TestCase
 
 from src.models.employees import Employees
-from src.models.wfh_requests import WFH_Requests
-from src.__init__ import db, create_app
+from __init__ import db, create_app
 from config import TestingConfig
 
 class BaseTestCase(TestCase):
@@ -25,7 +24,6 @@ class BaseTestCase(TestCase):
         with self.app.app_context():
             db.create_all()  # Ensure tables are created before adding data
 
-        # Add a manager (John Doe) and a team member reporting to the manager
         manager = Employees(
             staff_id=140001, 
             staff_fname="John", 
