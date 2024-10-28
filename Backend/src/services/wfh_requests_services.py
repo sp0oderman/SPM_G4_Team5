@@ -1,6 +1,8 @@
 from src.models.wfh_requests import WFH_Requests
 from src.models.employees import Employees
 
+# Import all email notification functions
+from src.utils.email_functions import *
 
 class WFH_Requests_Service:
     def __init__(self, db):
@@ -29,6 +31,17 @@ class WFH_Requests_Service:
             new_request = WFH_Requests(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks)
             self.db.session.add(new_request)
             self.db.session.commit()
+            
+            # Retrieve the generated request_id
+            request_id = new_request.request_id
+
+            # Send email notification of the new WFH Request to Reporting Manager
+            wfh_request = self.db.session.query(WFH_Requests).filter_by(request_id=request_id).first()
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+
+            # Send the email notification using mailersend
+            newRequestEmailNotif(reporting_manager, employee, wfh_request)
 
             return {"message": "WFH request submitted successfully!"}, 200
 
@@ -87,6 +100,14 @@ class WFH_Requests_Service:
         # Approve the request if within limits
         wfh_request.status = 'Approved'
         self.db.session.commit()
+
+        # Retrieve information needed to populate email content
+        reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+        employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+
+        # Send the email notification using mailersend
+        approvalOrRejectionEmailNotif(reporting_manager, employee, wfh_request)
+
         return {"message": "WFH request approved successfully!"}, 200
         
     # Service for Manager to reject WFH requests
@@ -103,6 +124,13 @@ class WFH_Requests_Service:
             wfh_request.reason = rejection_reason
             self.db.session.commit()
 
+            # Retrieve information needed to populate email content
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+
+            # Send the email notification using mailersend
+            approvalOrRejectionEmailNotif(reporting_manager, employee, wfh_request)
+
             return {"message": "WFH request rejected successfully!"}, 200
 
         except Exception as e:
@@ -112,9 +140,12 @@ class WFH_Requests_Service:
     # JAKOB'S FUNCTIONS
 
     # Get all wfh_requests from wfh_requests table
-    def get_all(self):
-        wfh_requests_list = self.db.session.scalars(self.db.select(WFH_Requests)).all()
+    def get_all(self, status):
+        if status == "All":
+            wfh_requests_list = self.db.session.scalars(self.db.select(WFH_Requests)).all()
+            return wfh_requests_list
 
+        wfh_requests_list = self.db.session.scalars(self.db.select(WFH_Requests).filter_by(status=status)).all()
         return wfh_requests_list
 
     # Get wfh_requests with specific request_id_num from wfh_requests table
@@ -155,6 +186,13 @@ class WFH_Requests_Service:
             # Delete the request from the database
             self.db.session.delete(wfh_request)
             self.db.session.commit()
+
+            # Retrieve information needed to populate email content
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+            
+            # Send the email notification using mailersend
+            withdrawRequestEmailNotif(reporting_manager, employee, wfh_request)
 
             return 200, None
 
