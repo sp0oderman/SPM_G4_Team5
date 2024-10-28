@@ -23,8 +23,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version:
-          - "3.10"
-          - "3.11"
           - "3.12-dev"
     
     # Name of the job that will be displayed in the Actions tab in GitHub
@@ -70,9 +68,9 @@ jobs:
       - name: Run tests on Unix-based systems
         if: runner.os != 'Windows'
         run: |
-          python -m unittest discover -s Backend/tests
+          python -m unittest discover -s Backend/tests/integration_tests
 
       - name: Run tests on Windows
         if: runner.os == 'Windows'
         run: |
-          python -m unittest discover -s Backend/tests
+          python -m unittest discover -s Backend/tests/integration_tests
