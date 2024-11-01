@@ -1,7 +1,7 @@
 from flask import Blueprint, request, render_template, redirect, url_for, session
 
 # Create a blueprint for user_accounts_routes
-def create_user_accounts_blueprint(user_accounts_service, employees_service):
+def create_user_accounts_blueprint(employees_service, wfh_requests_service, user_accounts_service):
     user_accounts_blueprint = Blueprint('user_accounts_blueprint', __name__)
 
     # Log user into WFH system
