@@ -1,6 +1,6 @@
 <template>
   <FullCalendar :options="calendarOptions" />
-  <ApplyWFHPrompt ref="applyWFHPrompt" @submit="handleSubmit" />
+  <ApplyWFHPrompt ref="applyWFHPrompt" @submit="handleApply" />
   <WithdrawWFHDialog ref="withdrawWFHDialog" @wfh-withdrawn="loadSchedule" />
 </template>
 
@@ -55,7 +55,7 @@ export default {
       }
     },
 
-    async handleSubmit(data) {
+    async handleApply(data) {
       const user = useAuthStore().getUser;
       const payload = {
         staff_id: user.staff_id,
@@ -82,16 +82,30 @@ export default {
         const user = useAuthStore().getUser;
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/staff_id/${user.staff_id}`);
         if (response.data.code === 200) {
-          const events = response.data.data.requests.map(request => ({
-            title: `${request.status}, ${request.arrangement_type}`,
-            date: new Date(request.chosen_date).toISOString().split('T')[0],
-            extendedProps: { requestId: request.request_id },
-          }));
+          const events = response.data.data.requests.map(request => {
+            let backgroundColor = '';
+            if (request.status === 'Pending') {
+              backgroundColor = 'orange';
+            } 
+            else if (request.status === 'Approved') {
+              backgroundColor = 'green';
+            }
+
+            return {
+              title: `${request.arrangement_type}`,
+              date: new Date(request.chosen_date).toISOString().split('T')[0],
+              backgroundColor,
+              extendedProps: { requestId: request.request_id },
+            };
+          });
+
           this.calendarOptions.events = events;
-        } else {
+        } 
+        else {
           console.error('No WFH requests found for the user.');
         }
-      } catch (error) {
+      } 
+      catch (error) {
         console.error('Error fetching WFH schedule:', error);
       }
     },

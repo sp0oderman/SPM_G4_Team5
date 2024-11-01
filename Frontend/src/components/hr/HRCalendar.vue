@@ -35,11 +35,11 @@
       };
     },
     methods: {
-      async loadTeamSchedule() {
+      async loadOverallSchedule() {
         try {
           const user = useAuthStore().getUser;
           const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/Approved`);
-          console.log(response.data.data);
+          
           if (response.data.code === 200) {
             const events = response.data.data.wfh_requests.map(request => ({
               title: `${request.staff_id}, ${request.arrangement_type}`,
@@ -59,7 +59,7 @@
       },
     },
     async mounted() {
-      await this.loadTeamSchedule();
+      await this.loadOverallSchedule();
     }
   };
   </script>
