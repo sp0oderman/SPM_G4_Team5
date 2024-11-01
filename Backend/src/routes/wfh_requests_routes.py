@@ -71,7 +71,7 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, user_
         return jsonify(requests_data), status_code
         
     # Route for Manager to approve WFH requests
-    @wfh_requests_blueprint.route('/approve_wfh_request', methods=['POST'])
+    @wfh_requests_blueprint.route('/approve_wfh_request', methods=['PUT'])
     def approve_pending_wfh_request():
         data = request.json
         request_id = data.get('request_id')
@@ -81,7 +81,7 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, user_
         return jsonify(response), status_code
 
     # Route for Manager to reject WFH requests
-    @wfh_requests_blueprint.route('/reject_wfh_request', methods=['POST'])
+    @wfh_requests_blueprint.route('/reject_wfh_request', methods=['PUT'])
     def reject_pending_wfh_request():
         data = request.json
         request_id = data.get('request_id')

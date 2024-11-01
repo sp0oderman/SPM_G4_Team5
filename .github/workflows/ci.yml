@@ -6,7 +6,6 @@ name: CI
 # - Any push to any branch
 # - Any pull request to any branch
 on:
-  asdfgefwa
   push:
   pull_request:
 

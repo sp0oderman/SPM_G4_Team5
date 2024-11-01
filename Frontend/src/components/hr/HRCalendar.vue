@@ -1,6 +1,6 @@
 <template>
-    <FullCalendar :options="calendarOptions" />
-  </template>
+  <FullCalendar :options="calendarOptions" />
+</template>
   
   <script>
   import FullCalendar from '@fullcalendar/vue3';
