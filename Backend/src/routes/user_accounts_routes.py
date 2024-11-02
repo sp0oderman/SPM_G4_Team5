@@ -43,7 +43,6 @@ def create_user_accounts_blueprint(employees_service, wfh_requests_service, user
 
         # Get user data in "user" variable
         user = session['user']
-        print(user)  
 
 
         # Retrieve employee details of "user"
