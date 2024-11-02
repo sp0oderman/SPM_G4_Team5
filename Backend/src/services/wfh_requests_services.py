@@ -143,7 +143,7 @@ class WFH_Requests_Service:
 
     # JAKOB'S FUNCTIONS
 
-    # Get all wfh_requests from wfh_requests table
+    # Get all wfh_requests from wfh_requests table - HR + CEO
     def get_all(self, status):
         if status == "All":
             wfh_requests_list = self.db.session.scalars(self.db.select(WFH_Requests)).all()
@@ -169,14 +169,15 @@ class WFH_Requests_Service:
         return staff_requests_list
 
     # Get all wfh_requests of team by reporting_manager_id_num from wfh_requests table
-    def find_by_team(self, reporting_manager_id_num):
+    def find_by_employees(self, employees_list):
 
-        # Get all requests for the given team (department and reporting manager)
-        team_requests_list = self.db.session.scalars(
-            self.db.select(WFH_Requests).filter_by(reporting_manager=reporting_manager_id_num)
-        ).all()
+        requests_list = []
 
-        return team_requests_list
+        for employee in employees_list:
+            wfh_requests = self.find_by_staff_id(employee.staff_id)
+            requests_list.extend(wfh_requests)
+
+        return requests_list
 
     # Delete a wfh_request by request_id_num from wfh_requests table
     def delete_wfh_request(self, request_id_num):    
@@ -203,3 +204,4 @@ class WFH_Requests_Service:
         except Exception as e:
             self.db.session.rollback()  # Rollback in case of an error
             return 500, e
+        
