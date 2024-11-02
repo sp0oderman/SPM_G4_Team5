@@ -43,6 +43,8 @@ def create_user_accounts_blueprint(user_accounts_service, employees_service):
 
         # Get user data in "user" variable
         user = session['user']
+        print(user)  
+
 
         # Retrieve employee details of "user"
         employee = employees_service.find_by_staff_id(user['staff_id'])

@@ -1,3 +1,4 @@
+from typing import Optional
 from src.models.wfh_requests import WFH_Requests
 from src.models.employees import Employees
 
@@ -15,10 +16,10 @@ class WFH_Requests_Service:
         try:
             team = self.db.session.query(Employees).filter_by(Reporting_Manager=manager_id).all()
             team_data = [{
-                'Staff_ID': employee.Staff_ID,
-                'Staff_FName': employee.Staff_FName,
-                'Staff_LName': employee.Staff_LName,
-                'Position': employee.Position
+                'Staff_ID': employee.staff_id,
+                'Staff_FName': employee.staff_fname,
+                'Staff_LName': employee.staff_lname,
+                'Position': employee.position
             } for employee in team]
             return team_data
         except Exception as e:
@@ -79,6 +80,8 @@ class WFH_Requests_Service:
                 "status": req.status
             } for req in pending_requests
         ]
+
+        print(requests_data)
         return requests_data, 200
 
     # Service for Manager to approve WFH requests
@@ -94,17 +97,18 @@ class WFH_Requests_Service:
 
         # Example business logic: enforce 50% team limit
         wfh_count = self.db.session.query(WFH_Requests).filter_by(status='Approved').count()
-        if wfh_count / team_size > 0.5:
-            return {"error": "More than 50 percent of the team is already working from home"}, 400
+
+        # if wfh_count / team_size > 0.5:
+        #     return {"error": "More than 50 percent of the team is already working from home"}, 400
 
         # Approve the request if within limits
         wfh_request.status = 'Approved'
         self.db.session.commit()
 
         # Retrieve information needed to populate email content
-        reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
-        employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
-
+        reporting_manager: Optional[Employees] = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+        employee: Optional[Employees] = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+        
         # Send the email notification using mailersend
         approvalOrRejectionEmailNotif(reporting_manager, employee, wfh_request)
 
@@ -125,8 +129,8 @@ class WFH_Requests_Service:
             self.db.session.commit()
 
             # Retrieve information needed to populate email content
-            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
-            employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+            reporting_manager: Optional[Employees] = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+            employee: Optional[Employees] = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
 
             # Send the email notification using mailersend
             approvalOrRejectionEmailNotif(reporting_manager, employee, wfh_request)
