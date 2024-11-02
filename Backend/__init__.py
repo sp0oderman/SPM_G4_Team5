@@ -8,7 +8,7 @@ session = Session()
 
 def create_app(config_class):
     """Application factory function."""
-    app = Flask(__name__, template_folder="src/templates")
+    app = Flask(__name__)
     
     # Load configuration
     app.config.from_object(config_class)
