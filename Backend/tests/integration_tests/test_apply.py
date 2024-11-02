@@ -107,7 +107,7 @@ class TestApplyWFH(BaseTestCase):
         db.session.commit()
 
         # Approve the WFH request
-        response = self.client.post('/wfh_requests/approve_wfh_request', json={
+        response = self.client.put('/wfh_requests/approve_wfh_request', json={
             'request_id': wfh_request.request_id,
             'manager_id': 140001
         })
@@ -131,7 +131,7 @@ class TestApplyWFH(BaseTestCase):
         db.session.commit()
 
         # Reject the WFH request
-        response = self.client.post('/wfh_requests/reject_wfh_request', json={
+        response = self.client.put('/wfh_requests/reject_wfh_request', json={
             'request_id': wfh_request.request_id,
             'rejection_reason': 'Not enough coverage'
         })
