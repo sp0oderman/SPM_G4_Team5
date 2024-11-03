@@ -29,7 +29,8 @@ export default {
         }
         const data = await response.json();
         this.pendingRequests = data;
-      } catch (error) {
+      } 
+      catch (error) {
         console.error("Error fetching pending requests:", error);
       }
     }

@@ -1,6 +1,7 @@
 <template>
     <MenuBar/>
-    <TeamCalendar/>
+    <Legend/>
+    <PersonalCalendar/>
 </template>
   
 <script>
