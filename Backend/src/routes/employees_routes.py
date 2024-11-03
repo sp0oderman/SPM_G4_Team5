@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify
 # from src.utils.hr_auth import hr_required
 
 # Create a blueprint for wfh_requests_routes
-def create_employees_blueprint(employees_service, wfh_requests_service, user_accounts_service):
+def create_employees_blueprint(employees_service, wfh_requests_service):
     employees_blueprint = Blueprint('employees_blueprint', __name__)
 
 

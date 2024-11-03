@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 # Create a blueprint for wfh_requests_routes
-def create_wfh_requests_blueprint(employees_service, wfh_requests_service, user_accounts_service):
+def create_wfh_requests_blueprint(employees_service, wfh_requests_service):
     wfh_requests_blueprint = Blueprint('wfh_requests_blueprint', __name__)
 
     # WUHAO'S ROUTES
