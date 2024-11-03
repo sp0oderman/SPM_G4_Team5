@@ -1,14 +1,12 @@
 from flask import Blueprint, jsonify
-# from src.utils.hr_auth import hr_required
 
 # Create a blueprint for wfh_requests_routes
-def create_employees_blueprint(employees_service, wfh_requests_service):
+def create_employees_blueprint(employees_service, wfh_requests_service, withdrawal_requests_service):
     employees_blueprint = Blueprint('employees_blueprint', __name__)
 
 
     # Get all employees from employees database model
     @employees_blueprint.route('/', methods=['GET'])
-    # @hr_required
     def get_all_employees():
         employee_list = employees_service.get_all()
 
@@ -51,7 +49,6 @@ def create_employees_blueprint(employees_service, wfh_requests_service):
 
     # Get specific employee by staff_id from employees database model
     @employees_blueprint.route('/staff/<int:staff_id_num>', methods=['GET'])
-    # @hr_required
     def get_staff_by_id(staff_id_num):
         employee = employees_service.find_by_staff_id(staff_id_num)
 
@@ -75,7 +72,6 @@ def create_employees_blueprint(employees_service, wfh_requests_service):
 
     # Get all employees in a specific team from employees database model
     @employees_blueprint.route('/team/<int:reporting_manager_id_num>', methods=['GET'])
-    # @hr_required
     def get_team_by_reporting_manager(reporting_manager_id_num):
         team_manager, team_list = employees_service.find_by_team(reporting_manager_id_num)
 
@@ -107,7 +103,6 @@ def create_employees_blueprint(employees_service, wfh_requests_service):
 
     # Get all employees in a specific department from employees database model
     @employees_blueprint.route("/staff/dept/<string:dept_name>")
-    # @hr_required
     def get_staff_by_dept(dept_name):
         dept_list = employees_service.find_by_dept(dept_name)
 
@@ -130,7 +125,6 @@ def create_employees_blueprint(employees_service, wfh_requests_service):
 
     # Get all employees with a specific role from employees database model
     @employees_blueprint.route("/staff/role/<string:role_num>")
-    # @hr_required
     def get_staff_by_role(role_num):
         role_list = employees_service.find_by_role(role_num)
 

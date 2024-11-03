@@ -19,17 +19,23 @@ def create_app(config_class):
 
     from src.services.employees_services import Employees_Service
     from src.services.wfh_requests_services import WFH_Requests_Service
+    from src.services.withdrawal_requests_services import Withdrawal_Requests_Service
 
     # Create Service instances
     employees_service = Employees_Service(db)
     wfh_requests_service = WFH_Requests_Service(db)
+    withdrawal_requests_service = Withdrawal_Requests_Service(db)
         
     # Import blueprints
     from src.routes.employees_routes import create_employees_blueprint
     from src.routes.wfh_requests_routes import create_wfh_requests_blueprint
+    from src.routes.withdrawal_requests_routes import create_withdrawal_requests_blueprint
+
     
     # Register blueprints
-    app.register_blueprint(create_employees_blueprint(employees_service, wfh_requests_service), url_prefix='/employees')
-    app.register_blueprint(create_wfh_requests_blueprint(employees_service, wfh_requests_service), url_prefix='/wfh_requests')
+    app.register_blueprint(create_employees_blueprint(employees_service, wfh_requests_service, withdrawal_requests_service), url_prefix='/employees')
+    app.register_blueprint(create_wfh_requests_blueprint(employees_service, wfh_requests_service, withdrawal_requests_service), url_prefix='/wfh_requests')
+    app.register_blueprint(create_withdrawal_requests_blueprint(employees_service, wfh_requests_service, withdrawal_requests_service), url_prefix='/withdrawal_requests')
+
 
     return app

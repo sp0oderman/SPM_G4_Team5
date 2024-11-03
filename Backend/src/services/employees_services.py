@@ -1,4 +1,6 @@
 from src.models.employees import Employees
+from src.models.wfh_requests import WFH_Requests
+from src.models.withdrawal_requests import Withdrawal_Requests  
 
 
 class Employees_Service:

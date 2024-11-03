@@ -4,7 +4,7 @@ class WFH_Requests(db.Model):
     __tablename__ = 'wfh_requests'
 
     request_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    staff_id = db.Column(db.Integer,nullable=False)
+    staff_id = db.Column(db.Integer, nullable=False)
     reporting_manager = db.Column(db.Integer, nullable=False)
     dept = db.Column(db.String(100), nullable=False)
     chosen_date = db.Column(db.String(100), nullable=False)
@@ -31,7 +31,6 @@ class WFH_Requests(db.Model):
                 "staff_id": self.staff_id,
                 "reporting_manager": self.reporting_manager,
                 "dept": self.dept,
-                "chosen_date": self.chosen_date,
                 "chosen_date": self.chosen_date,
                 "arrangement_type": self.arrangement_type,
                 "request_datetime": self.request_datetime,
