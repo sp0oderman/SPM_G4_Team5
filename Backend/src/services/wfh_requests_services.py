@@ -7,12 +7,12 @@ class WFH_Requests_Service:
 
     def get_manager_team(self, manager_id):
         try:
-            team = self.db.session.query(Employees).filter_by(Reporting_Manager=manager_id).all()
+            team = self.db.session.query(Employees).filter_by(reporting_manager=manager_id).all()
             team_data = [{
-                'Staff_ID': employee.Staff_ID,
-                'Staff_FName': employee.Staff_FName,
-                'Staff_LName': employee.Staff_LName,
-                'Position': employee.Position
+                'staff_id': employee.staff_id,
+                'staff_fname': employee.staff_fname,
+                'staff_lname': employee.staff_lname,
+                'position': employee.position
             } for employee in team]
             return team_data, 200
         except Exception as e:
@@ -34,15 +34,13 @@ class WFH_Requests_Service:
             return {"error": str(e)}, 500
 
     def can_apply_wfh(self, staff_id, chosen_date):
-        # Retrieve reporting manager ID for the staff member
-        employee = self.db.session.query(Employees).filter_by(Staff_ID=staff_id).first()
+        employee = self.db.session.query(Employees).filter_by(staff_id=staff_id).first()
         if not employee:
             return False
 
-        # Get the team size and approved WFH count for the selected date
-        team_size = self.db.session.query(Employees).filter_by(Reporting_Manager=employee.Reporting_Manager).count()
+        team_size = self.db.session.query(Employees).filter_by(reporting_manager=employee.reporting_manager).count()
         wfh_count = self.db.session.query(WFH_Requests).filter(
-            WFH_Requests.reporting_manager == employee.Reporting_Manager,
+            WFH_Requests.reporting_manager == employee.reporting_manager,
             WFH_Requests.chosen_date == chosen_date,
             WFH_Requests.status == 'Approved'
         ).count()
@@ -78,7 +76,7 @@ class WFH_Requests_Service:
             return {"error": "No pending WFH request found"}, 404
 
         # Get the team size and approved WFH count for the request date
-        team_size = self.db.session.query(Employees).filter_by(Reporting_Manager=manager_id).count()
+        team_size = self.db.session.query(Employees).filter_by(reporting_manager=manager_id).count()
         wfh_count = self.db.session.query(WFH_Requests).filter(
             WFH_Requests.reporting_manager == manager_id,
             WFH_Requests.chosen_date == wfh_request.chosen_date,
