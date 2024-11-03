@@ -45,9 +45,9 @@ def create_wfh_requests_blueprint(wfh_requests_service):
         if not staff_id or not chosen_date or not arrangement_type:
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Check if user has reached the WFH limit or has conflicting dates
+        # Check if user has reached the 50% rule or has conflicting dates
         if not wfh_requests_service.can_apply_wfh(staff_id, chosen_date):
-            return jsonify({"error": "You have reached your WFH limit or have conflicting dates"}), 400
+            return jsonify({"error": "More than 50 percent of the team is already working from home on this date"}), 400
         
         # Call the service function
         response, status_code = wfh_requests_service.apply_wfh(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks)

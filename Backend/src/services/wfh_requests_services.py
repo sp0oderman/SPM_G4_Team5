@@ -34,10 +34,12 @@ class WFH_Requests_Service:
             return {"error": str(e)}, 500
 
     def can_apply_wfh(self, staff_id, chosen_date):
+        # Retrieve reporting manager ID for the staff member
         employee = self.db.session.query(Employees).filter_by(staff_id=staff_id).first()
         if not employee:
             return False
 
+        # Get the team size and approved WFH count for the selected date
         team_size = self.db.session.query(Employees).filter_by(reporting_manager=employee.reporting_manager).count()
         wfh_count = self.db.session.query(WFH_Requests).filter(
             WFH_Requests.reporting_manager == employee.reporting_manager,
@@ -46,7 +48,7 @@ class WFH_Requests_Service:
         ).count()
 
         # Enforce the 50% rule
-        if wfh_count / team_size >= 0.5:
+        if team_size > 0 and (wfh_count / team_size) >= 0.5:
             return False
         return True
 
