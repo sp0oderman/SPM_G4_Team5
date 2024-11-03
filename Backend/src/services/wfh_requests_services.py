@@ -5,31 +5,59 @@ from src.models.withdrawal_requests import Withdrawal_Requests
 # Import all email notification functions
 from src.utils.email_functions import *
 
+from sqlalchemy import and_
+
 class WFH_Requests_Service:
     def __init__(self, db):
         self.db = db
+    
+    # Get team strength by given date
+    def get_team_strength_by_date(self, reporting_manager_id, date):
+        approved_requests_list = self.db.session.query(WFH_Requests).filter(
+                                    and_(
+                                        WFH_Requests.reporting_manager == reporting_manager_id,
+                                        WFH_Requests.status == "Approved",
+                                        WFH_Requests.chosen_date == date
+                                    )
+                                ).all()
+                                
+        # Initialise dictionary to store strength count
+        strength_dict = {"AM":0, "PM":0}
 
-    # WUHAO'S FUNCTIONS
+        for req in approved_requests_list:
+            if  req["arrangement_type"] == "Full Day":
+                strength_dict["AM"] += 1
+                strength_dict["PM"] += 1
+            elif req["arrangement_type"] == "AM":
+                strength_dict["AM"] += 1
+            elif req["arrangement_type"] == "PM":
+                strength_dict["PM"] += 1
 
-    # Service for Manager to view employees reporting to them
-    def get_manager_team(self, manager_id):
-        try:
-            team = self.db.session.query(Employees).filter_by(Reporting_Manager=manager_id).all()
-            team_data = [{
-                'Staff_ID': employee.Staff_ID,
-                'Staff_FName': employee.Staff_FName,
-                'Staff_LName': employee.Staff_LName,
-                'Position': employee.Position
-            } for employee in team]
-            return team_data
-        except Exception as e:
-            return {"error": str(e)}, 500
+        return strength_dict
+
+    # Get all wfh_requests of team by list of employees
+    def find_by_employees(self, employees_list):
+        requests_list = []
+
+        for employee in employees_list:
+            wfh_requests = self.find_by_staff_id(employee.staff_id)
+            requests_list.extend(wfh_requests)
+
+        return requests_list
+
+    # Get all wfh_requests of staff by staff_id_num from wfh_requests table
+    def find_by_staff_id(self, staff_id_num):
+        staff_requests_list = self.db.session.scalars(
+            self.db.select(WFH_Requests).filter_by(staff_id=staff_id_num)
+            ).all()
         
+        return staff_requests_list
+
     # Service to apply for WFH arrangement (For Users)
-    def apply_wfh(self, staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks):
+    def apply_wfh_indiv(self, staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id):
         try:
             # Insert the new WFH request
-            new_request = WFH_Requests(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks)
+            new_request = WFH_Requests(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id)
             self.db.session.add(new_request)
             self.db.session.commit()
             
@@ -62,7 +90,38 @@ class WFH_Requests_Service:
         #         if date in existing_dates:
         #             return False
         return True
-        
+
+    def get_max_recurring_id(self):
+        max_id = self.db.session.query(self.db.func.max(WFH_Requests.recurring_id)).scalar()
+        return max_id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
     # Service for Manager to view pending WFH requests
     def view_pending_wfh_requests(self, manager_id):
         # Fetch the manager's team and their pending requests
@@ -138,10 +197,8 @@ class WFH_Requests_Service:
             return {"error": str(e)}, 500
 
 
-    # JAKOB'S FUNCTIONS
-
-    # Get all wfh_requests from wfh_requests table - HR + CEO
-    def get_all(self, status):
+    # Get wfh_requests by status
+    def get_by_status(self, status):
         if status == "All":
             wfh_requests_list = self.db.session.scalars(self.db.select(WFH_Requests)).all()
             return wfh_requests_list
@@ -157,24 +214,6 @@ class WFH_Requests_Service:
         
         return wfh_request
 
-    # Get all wfh_requests of staff by staff_id_num from wfh_requests table
-    def find_by_staff_id(self, staff_id_num):
-        staff_requests_list = self.db.session.scalars(
-            self.db.select(WFH_Requests).filter_by(staff_id=staff_id_num)
-            ).all()
-        
-        return staff_requests_list
-
-    # Get all wfh_requests of team by reporting_manager_id_num from wfh_requests table
-    def find_by_employees(self, employees_list):
-
-        requests_list = []
-
-        for employee in employees_list:
-            wfh_requests = self.find_by_staff_id(employee.staff_id)
-            requests_list.extend(wfh_requests)
-
-        return requests_list
 
     # Delete a wfh_request by request_id_num from wfh_requests table
     def delete_wfh_request(self, request_id_num):    
@@ -202,3 +241,44 @@ class WFH_Requests_Service:
             self.db.session.rollback()  # Rollback in case of an error
             return 500, e
         
+
+
+    
+
+    # # DEPRECATED - Service for Manager to view employees reporting to them
+    # def get_manager_team(self, manager_id):
+    #     try:
+    #         team = self.db.session.query(Employees).filter_by(Reporting_Manager=manager_id).all()
+    #         team_data = [{
+    #             'Staff_ID': employee.Staff_ID,
+    #             'Staff_FName': employee.Staff_FName,
+    #             'Staff_LName': employee.Staff_LName,
+    #             'Position': employee.Position
+    #         } for employee in team]
+    #         return team_data
+    #     except Exception as e:
+    #         return {"error": str(e)}, 500
+
+    # # DEPRECATED - Service to apply for WFH arrangement (For Users)
+    # def apply_wfh(self, staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks):
+    #     try:
+    #         # Insert the new WFH request
+    #         new_request = WFH_Requests(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks)
+    #         self.db.session.add(new_request)
+    #         self.db.session.commit()
+            
+    #         # Retrieve the generated request_id
+    #         request_id = new_request.request_id
+
+    #         # Send email notification of the new WFH Request to Reporting Manager
+    #         wfh_request = self.db.session.query(WFH_Requests).filter_by(request_id=request_id).first()
+    #         reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+    #         employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+
+    #         # Send the email notification using mailersend
+    #         newRequestEmailNotif(reporting_manager, employee, wfh_request)
+
+    #         return {"message": "WFH request submitted successfully!"}, 200
+
+    #     except Exception as e:
+    #         return {"error": str(e)}, 500

@@ -4,6 +4,74 @@ from flask import Blueprint, jsonify
 def create_employees_blueprint(employees_service, wfh_requests_service, withdrawal_requests_service):
     employees_blueprint = Blueprint('employees_blueprint', __name__)
 
+    # Get list of all reporting_managers - CEO/HR
+    @employees_blueprint.route('/reporting_managers_list', methods=['GET'])
+    def get_all_reporting_managers():
+        # Get employee objects of all reporting_managers
+        reporting_managers_list = employees_service.get_all_reporting_managers()
+
+        if len(reporting_managers_list):
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": {
+                        "reporting_managers": [employee.json() for employee in reporting_managers_list]
+                    }
+                }
+            )
+        return jsonify(
+            {
+                "code": 404,
+                "message": "There are no employees."
+            }
+        ), 404
+
+    # Get size of a team by reporting_manager_id
+    @employees_blueprint.route('/team/size/<int:reporting_manager_id_num>', methods=['GET'])
+    def get_all_reporting_managers(reporting_manager_id_num):
+        # Get team size
+        team_size = employees_service.get_team_size(reporting_manager_id_num)
+
+        if team_size:
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": {
+                        "team_size": team_size
+                    }
+                }
+            )
+        return jsonify(
+            {
+                "code": 404,
+                "message": "There is no team with this manager."
+            }
+        ), 404
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # Get all employees from employees database model
     @employees_blueprint.route('/', methods=['GET'])

@@ -13,8 +13,9 @@ class WFH_Requests(db.Model):
     status = db.Column(db.String(100), nullable=False)
     remarks = db.Column(db.String(5000), nullable=False)
     recurring_id = db.Column(db.Integer, nullable=True)
+    reason_for_status = db.Column(db.String(5000), nullable=True)
 
-    def __init__(self, staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id):
+    def __init__(self, staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id, reason_for_status):
         self.staff_id = staff_id
         self.reporting_manager = reporting_manager
         self.dept = dept
@@ -24,6 +25,7 @@ class WFH_Requests(db.Model):
         self.status = status
         self.remarks = remarks
         self.recurring_id = recurring_id
+        self.reason_for_status = reason_for_status
 
     def json(self):
         return {
@@ -36,5 +38,6 @@ class WFH_Requests(db.Model):
                 "request_datetime": self.request_datetime,
                 "status": self.status,
                 "remarks": self.remarks,
-                "recurring_id": self.recurring_id
+                "recurring_id": self.recurring_id,
+                "reason_for_status": self.reason_for_status
             }

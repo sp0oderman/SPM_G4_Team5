@@ -10,14 +10,16 @@ class Withdrawal_Requests(db.Model):
     request_datetime = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(100), nullable=False)
     remarks = db.Column(db.String(5000), nullable=False)
+    reason_for_status = db.Column(db.String(5000), nullable=True)
 
-    def __init__(self, staff_id, reporting_manager, wfh_request_id, request_datetime, status, remarks):
+    def __init__(self, staff_id, reporting_manager, wfh_request_id, request_datetime, status, remarks, reason_for_status):
         self.staff_id = staff_id
         self.reporting_manager = reporting_manager
         self.wfh_request_id = wfh_request_id
         self.request_datetime = request_datetime
         self.status = status
         self.remarks = remarks
+        self.reason_for_status = reason_for_status
 
     def json(self):
         return {
@@ -28,4 +30,5 @@ class Withdrawal_Requests(db.Model):
                 "request_datetime": self.request_datetime,
                 "status": self.status,
                 "remarks": self.remarks,
+                "reason_for_status": self.reason_for_status
             }
