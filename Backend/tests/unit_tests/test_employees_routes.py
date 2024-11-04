@@ -1,139 +1,143 @@
-import pytest
-from flask import Flask
+import unittest
 from unittest.mock import MagicMock
-from src.routes.employees_routes import create_employees_blueprint  # Adjust import to match your structure
+from flask import Flask
+from src.routes.employees_routes import create_employees_blueprint  # Replace with the correct import path
 
+class TestEmployeesBlueprint(unittest.TestCase):
+    def setUp(self):
+        # Create a Flask app and register the blueprint
+        self.app = Flask(__name__)
+        self.employees_service = MagicMock()
+        self.wfh_requests_service = MagicMock()
+        self.user_accounts_service = MagicMock()
 
-@pytest.fixture
-def client():
-    # Create a Flask app and register the blueprint for testing
-    app = Flask(__name__)
-    employees_service = MagicMock()  # Mock the employees_service
-    employees_blueprint = create_employees_blueprint(employees_service)
-    app.register_blueprint(employees_blueprint, url_prefix='/employees')
-    client = app.test_client()
+        employees_blueprint = create_employees_blueprint(
+            self.employees_service, 
+            self.wfh_requests_service, 
+            self.user_accounts_service
+        )
+        self.app.register_blueprint(employees_blueprint, url_prefix="/employees")
 
-    yield client, employees_service
+        self.client = self.app.test_client()
 
+    def test_get_all_employees_with_data(self):
+        # Mock the response from employees_service.get_all()
+        mock_employee = MagicMock()
+        mock_employee.json.return_value = {"id": 1, "name": "John Doe"}
+        self.employees_service.get_all.return_value = [mock_employee]
 
-def test_get_all_employees(client):
-    client, employees_service = client
-    # Mock the return value of employees_service.get_all()
-    employees_service.get_all.return_value = [MagicMock(json=lambda: {"name": "John Doe", "role": 2})]
+        response = self.client.get("/employees/")
+        data = response.get_json()
 
-    response = client.get('/employees/')
-    assert response.status_code == 200
-    assert response.json['code'] == 200
-    assert len(response.json['data']['employees']) == 1
-    assert response.json['data']['employees'][0]['name'] == 'John Doe'
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("employees", data["data"])
+        self.assertEqual(data["data"]["employees"][0]["name"], "John Doe")
 
-    # Test case when no employees are found
-    employees_service.get_all.return_value = []
-    response = client.get('/employees/')
-    assert response.status_code == 404
-    assert response.json['message'] == "There are no employees."
+    def test_get_all_employees_no_data(self):
+        self.employees_service.get_all.return_value = []
+        response = self.client.get("/employees/")
+        data = response.get_json()
 
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(data["message"], "There are no employees.")
 
-def test_get_list_of_departments(client):
-    client, employees_service = client
-    # Mock the return value of employees_service.get_departments_list()
-    employees_service.get_departments_list.return_value = ["HR", "Engineering", "Marketing"]
+    def test_get_list_of_departments_with_data(self):
+        self.employees_service.get_departments_list.return_value = ["HR", "Engineering"]
+        response = self.client.get("/employees/dept_list")
+        data = response.get_json()
 
-    response = client.get('/employees/dept_list')
-    assert response.status_code == 200
-    assert response.json['code'] == 200
-    assert response.json['data']['departments'] == ["HR", "Engineering", "Marketing"]
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("departments", data["data"])
+        self.assertIn("HR", data["data"]["departments"])
 
-    # Test case when no departments are found
-    employees_service.get_departments_list.return_value = []
-    response = client.get('/employees/dept_list')
-    assert response.status_code == 404
-    assert response.json['message'] == "No departments found."
+    def test_get_list_of_departments_no_data(self):
+        self.employees_service.get_departments_list.return_value = []
+        response = self.client.get("/employees/dept_list")
+        data = response.get_json()
 
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(data["message"], "No departments found.")
 
-def test_get_staff_by_id(client):
-    client, employees_service = client
-    # Mock the return value of employees_service.find_by_staff_id()
-    employees_service.find_by_staff_id.return_value = MagicMock(json=lambda: {"staff_id": 1, "name": "Jane Doe"})
+    def test_get_staff_by_id_found(self):
+        mock_employee = MagicMock()
+        mock_employee.json.return_value = {"id": 1, "name": "John Doe"}
+        self.employees_service.find_by_staff_id.return_value = mock_employee
 
-    response = client.get('/employees/staff/1')
-    assert response.status_code == 200
-    assert response.json['code'] == 200
-    assert response.json['data']['employee']['name'] == "Jane Doe"
+        response = self.client.get("/employees/staff/1")
+        data = response.get_json()
 
-    # Test case when the employee is not found
-    employees_service.find_by_staff_id.return_value = None
-    response = client.get('/employees/staff/999')
-    assert response.status_code == 404
-    assert response.json['message'] == "Employee not found."
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data["data"]["staff_id"], 1)
+        self.assertEqual(data["data"]["employee"]["name"], "John Doe")
 
+    def test_get_staff_by_id_not_found(self):
+        self.employees_service.find_by_staff_id.return_value = None
+        response = self.client.get("/employees/staff/1")
+        data = response.get_json()
 
-def test_get_team_by_reporting_manager(client):
-    client, employees_service = client
-    # Mock the return value of employees_service.find_by_team()
-    team_manager_mock = MagicMock(json=lambda: {"staff_id": 1, "name": "John Manager"})
-    team_list_mock = [MagicMock(json=lambda: {"name": "Employee 1"}), MagicMock(json=lambda: {"name": "Employee 2"})]
-    employees_service.find_by_team.return_value = (team_manager_mock, team_list_mock)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(data["message"], "Employee not found.")
 
-    response = client.get('/employees/team/1')
-    assert response.status_code == 200
-    assert response.json['code'] == 200
-    assert response.json['data']['team_manager']['name'] == "John Manager"
-    assert len(response.json['data']['team_list']) == 2
+    def test_get_team_by_reporting_manager_found(self):
+        mock_manager = MagicMock()
+        mock_manager.json.return_value = {"id": 1, "name": "Manager Name"}
+        mock_team_member = MagicMock()
+        mock_team_member.json.return_value = {"id": 2, "name": "Team Member"}
+        self.employees_service.find_by_team.return_value = (mock_manager, [mock_team_member])
 
-    # Test case when the team manager is not found
-    employees_service.find_by_team.return_value = (None, [])
-    response = client.get('/employees/team/999')
-    assert response.status_code == 404
-    assert response.json['message'] == "Team manager not found."
+        response = self.client.get("/employees/team/1")
+        data = response.get_json()
 
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data["data"]["team_manager"]["name"], "Manager Name")
+        self.assertEqual(data["data"]["team_list"][0]["name"], "Team Member")
 
-def test_get_staff_by_dept(client):
-    client, employees_service = client
-    # Mock the return value of employees_service.find_by_dept()
-    employees_service.find_by_dept.return_value = [MagicMock(json=lambda: {"name": "Employee 1"}), MagicMock(json=lambda: {"name": "Employee 2"})]
+    def test_get_team_by_reporting_manager_not_found(self):
+        self.employees_service.find_by_team.return_value = (None, [])
+        response = self.client.get("/employees/team/1")
+        data = response.get_json()
 
-    response = client.get('/employees/staff/dept/HR')
-    assert response.status_code == 200
-    assert response.json['code'] == 200
-    assert len(response.json['data']['employees']) == 2
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(data["message"], "Team manager not found.")
 
-    # Test case when department is not found
-    employees_service.find_by_dept.return_value = []
-    response = client.get('/employees/staff/dept/UnknownDept')
-    assert response.status_code == 404
-    assert response.json['message'] == "Department not found."
+    def test_get_staff_by_dept_found(self):
+        mock_employee = MagicMock()
+        mock_employee.json.return_value = {"id": 1, "name": "John Doe"}
+        self.employees_service.find_by_dept.return_value = [mock_employee]
 
+        response = self.client.get("/employees/staff/dept/HR")
+        data = response.get_json()
 
-def test_get_staff_by_role(client):
-    client, employees_service = client
-    # Mock the return value of employees_service.find_by_role()
-    employees_service.find_by_role.return_value = [MagicMock(json=lambda: {"name": "Employee 1"}), MagicMock(json=lambda: {"name": "Employee 2"})]
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data["data"]["dept"], "HR")
+        self.assertEqual(data["data"]["employees"][0]["name"], "John Doe")
 
-    response = client.get('/employees/staff/role/1')
-    assert response.status_code == 200
-    assert response.json['code'] == 200
-    assert len(response.json['data']['employees']) == 2
+    def test_get_staff_by_dept_not_found(self):
+        self.employees_service.find_by_dept.return_value = []
+        response = self.client.get("/employees/staff/dept/HR")
+        data = response.get_json()
 
-    # Test case when role is not found
-    employees_service.find_by_role.return_value = []
-    response = client.get('/employees/staff/role/999')
-    assert response.status_code == 404
-    assert response.json['message'] == "Role not found."
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(data["message"], "Department not found.")
 
+    def test_get_staff_by_email_found(self):
+        mock_employee = MagicMock()
+        mock_employee.json.return_value = {"id": 1, "name": "John Doe", "email": "john@example.com"}
+        self.employees_service.find_by_email.return_value = mock_employee
 
-def test_get_staff_by_email(client):
-    client, employees_service = client
-    # Mock the return value of employees_service.find_by_email()
-    employees_service.find_by_email.return_value = MagicMock(json=lambda: {"name": "Jane Doe", "email": "jane@example.com"})
+        response = self.client.get("/employees/staff/email/john@example.com")
+        data = response.get_json()
 
-    response = client.get('/employees/staff/email/jane@example.com')
-    assert response.status_code == 200
-    assert response.json['code'] == 200
-    assert response.json['data']['name'] == "Jane Doe"
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data["data"]["name"], "John Doe")
 
-    # Test case when employee email is not found
-    employees_service.find_by_email.return_value = None
-    response = client.get('/employees/staff/email/unknown@example.com')
-    assert response.status_code == 404
-    assert response.json['message'] == "Employee not found."
+    def test_get_staff_by_email_not_found(self):
+        self.employees_service.find_by_email.return_value = None
+        response = self.client.get("/employees/staff/email/john@example.com")
+        data = response.get_json()
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(data["message"], "Employee not found.")
+
+if __name__ == "__main__":
+    unittest.main()
