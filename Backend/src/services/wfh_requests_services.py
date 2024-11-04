@@ -6,6 +6,7 @@ from src.models.withdrawal_requests import Withdrawal_Requests
 from src.utils.email_functions import *
 
 from sqlalchemy import and_
+from datetime import datetime
 
 class WFH_Requests_Service:
     def __init__(self, db):
@@ -25,12 +26,12 @@ class WFH_Requests_Service:
         strength_dict = {"AM":0, "PM":0}
 
         for req in approved_requests_list:
-            if  req["arrangement_type"] == "Full Day":
+            if  req.arrangement_type == "Full Day":
                 strength_dict["AM"] += 1
                 strength_dict["PM"] += 1
-            elif req["arrangement_type"] == "AM":
+            elif req.arrangement_type == "AM":
                 strength_dict["AM"] += 1
-            elif req["arrangement_type"] == "PM":
+            elif req.arrangement_type == "PM":
                 strength_dict["PM"] += 1
 
         return strength_dict
@@ -47,7 +48,7 @@ class WFH_Requests_Service:
 
     # Get all wfh_requests of staff by staff_id_num from wfh_requests table
     def find_by_staff_id(self, staff_id_num, status):
-        if status != "all":
+        if status != "All":
             staff_requests_list = self.db.session.query(WFH_Requests).filter(
                 and_(
                     WFH_Requests.staff_id == staff_id_num,
@@ -63,10 +64,10 @@ class WFH_Requests_Service:
         return staff_requests_list
 
     # Service to apply for WFH arrangement (For Users)
-    def apply_wfh_indiv(self, staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id):
+    def apply_wfh(self, staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id):
         try:
             # Insert the new WFH request
-            new_request = WFH_Requests(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id)
+            new_request = WFH_Requests(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id, reason_for_status=None)
             self.db.session.add(new_request)
             self.db.session.commit()
             
@@ -85,6 +86,27 @@ class WFH_Requests_Service:
 
         except Exception as e:
             return {"error": str(e)}, 500
+        
+    def can_apply_wfh(self, staff_id, chosen_date, arrangement_type):
+        # Convert chosen_date to date object for consistent comparison
+        chosen_date = datetime.strptime(chosen_date, "%Y-%m-%d").date() if isinstance(chosen_date, str) else chosen_date
+
+        # Retrieve all WFH requests for the given staff member on the chosen date
+        staff_requests_list = self.db.session.query(WFH_Requests).filter(
+            WFH_Requests.staff_id == staff_id,
+            WFH_Requests.chosen_date == chosen_date.strftime("%Y-%m-%d")
+        ).all()
+
+        for request in staff_requests_list:
+            # Check if arrangement type conflicts with any existing request
+            if arrangement_type == "Full Day" or request.arrangement_type == "Full Day" or request.arrangement_type == arrangement_type:
+                # Conflict found, return False
+                return False
+
+        # No conflicts found, return True
+        return True
+
+
 
     def get_max_recurring_id(self):
         max_id = self.db.session.query(self.db.func.max(WFH_Requests.recurring_id)).scalar()
@@ -146,7 +168,7 @@ class WFH_Requests_Service:
         except Exception as e:
             return {"error": str(e)}, 500
         
-    # Service for Manager to withdraw approved WFH requests
+    # Service for Manager to withdraw approved WFH requests or staff to withdraw pending request
     def withdraw_wfh_request(self, request_id, withdrawal_reason):
         try:
 
@@ -222,7 +244,7 @@ class WFH_Requests_Service:
         return wfh_request
 
 
-    # # CEPRECATED - Delete a wfh_request by request_id_num from wfh_requests table
+    # # DEPRECATED - Delete a wfh_request by request_id_num from wfh_requests table
     # def delete_wfh_request(self, request_id_num):    
     #     try:    
     #         # Find the work-from-home request by request_id

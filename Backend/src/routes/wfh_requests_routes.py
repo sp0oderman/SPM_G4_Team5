@@ -76,7 +76,6 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
             }
         ), 404
 
-    # Route to apply for WFH arrangement
     @wfh_requests_blueprint.route('/apply_wfh_request', methods=['POST'])
     def apply_for_wfh_request():
         data = request.json
@@ -85,52 +84,62 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
         dept = data.get("dept")
         chosen_date = data.get("chosen_date")
         arrangement_type = data.get("arrangement_type")
-        request_datetime = data.get("request_datetime")
+        request_datetime = data.get("request_datetime") or datetime.now()
         status = "Pending"
         remarks = data.get("remarks")
         recurring_id = data.get("recurring_id")
         reason_for_status = None
 
-        if not all([staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, remarks]):
+        if not all([staff_id, reporting_manager, dept, chosen_date, arrangement_type, remarks]):
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Check if user has conflicting dates
-        if not wfh_requests_service.can_apply_wfh(staff_id, chosen_date):
-            return jsonify({"error": "You have conflicting dates"}), 400
-        
-        if recurring_id == -1:
-            # Call the service function
-            response, status_code = wfh_requests_service.apply_wfh(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id, reason_for_status)
-        else:
-            # Init the reccurring_id to be recorded for the requests
-            max_recurring_id = wfh_requests_service.get_max_recurring_id()  # Implement this in your service
-            recurring_id = (max_recurring_id or 0) + 1
+        # Handle recurring requests
+        if recurring_id != -1:
+            max_recurring_id = wfh_requests_service.get_max_recurring_id() or 0
+            recurring_id = max_recurring_id + 1
 
-            # Means is recurring dates requests
-            end_date = data.get("end_date")
-
-            # Convert to date objects
+            # Convert dates to date objects
             chosen_date = datetime.strptime(data.get("chosen_date"), "%Y-%m-%d")
             end_date = datetime.strptime(data.get("end_date"), "%Y-%m-%d")
 
-            # Init dict to return
-            returnDict = {"responses": [], "status_codes": []}
+            # List to hold dates for recurring requests
+            recurring_dates = []
+            temp_date = chosen_date
 
-            # Loop while the specified date less than end_date
-            while chosen_date <= end_date:
+            # Build list of dates for recurring requests
+            while temp_date <= end_date:
+                recurring_dates.append(temp_date)
+                temp_date += timedelta(days=7)
+
+            # Check all dates for conflicts before creating any requests
+            for date in recurring_dates:
+                if not wfh_requests_service.can_apply_wfh(staff_id, date, arrangement_type):
+                    # Conflict found, return an error
+                    return jsonify({
+                        "error": f"Conflict detected for date {date.strftime('%Y-%m-%d')}. Recurring request cannot be processed."
+                    }), 400
+
+            # If no conflicts, proceed to create requests
+            returnDict = {"responses": [], "status_codes": []}
+            for date in recurring_dates:
                 response, status_code = wfh_requests_service.apply_wfh(
-                    staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id, reason_for_status
+                    staff_id, reporting_manager, dept, date, arrangement_type, request_datetime, status, remarks, recurring_id
                 )
                 returnDict["responses"].append(response)
                 returnDict["status_codes"].append(status_code)
 
-                # Increment the current date by 7 days for weekly recurrence
-                chosen_date += timedelta(days=7)
-
             return jsonify(returnDict), 201
 
-        # Return the response from the service
-        return jsonify(response), status_code
+        # Handle single WFH request (non-recurring)
+        else:
+            # Check for conflicts for a single date
+            if not wfh_requests_service.can_apply_wfh(staff_id, chosen_date, arrangement_type):
+                return jsonify({"error": "You have conflicting dates"}), 400
+
+            response, status_code = wfh_requests_service.apply_wfh(
+                staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id
+            )
+            return jsonify(response), status_code
         
     # Route for Manager to approve WFH requests
     @wfh_requests_blueprint.route('/approve_wfh_request', methods=['PUT'])
@@ -171,12 +180,12 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
     def withdraw_wfh_request():
         data = request.json
         request_id = data.get('request_id')
-        wihdrawal_reason = data.get('reason_for_status')
+        withdrawal_reason = data.get('reason_for_status')
 
-        if not request_id or not wihdrawal_reason:
+        if not request_id or not withdrawal_reason:
             return jsonify({"error": "Request ID and withdrawal reason are required"}), 400
 
-        response, status_code = wfh_requests_service.withdraw_wfh_request(request_id, wihdrawal_reason)
+        response, status_code = wfh_requests_service.withdraw_wfh_request(request_id, withdrawal_reason)
         return jsonify(response), status_code
 
 #####################################################################################################################
@@ -187,8 +196,8 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
 
     # Get all wfh_requests from wfh_requests table
     @wfh_requests_blueprint.route('/<string:status>', methods=['GET'])
-    def get_all_wfh_requests(status):
-        wfh_requests_list = wfh_requests_service.get_all(status)
+    def get_wfh_requests_by_status(status):
+        wfh_requests_list = wfh_requests_service.get_by_status(status)
 
         if len(wfh_requests_list):
             return jsonify(

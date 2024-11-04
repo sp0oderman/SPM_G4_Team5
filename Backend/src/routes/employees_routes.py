@@ -10,7 +10,7 @@ def create_employees_blueprint(employees_service, wfh_requests_service, withdraw
         # Get employee objects of all reporting_managers
         reporting_managers_list = employees_service.get_all_reporting_managers()
 
-        if len(reporting_managers_list):
+        if reporting_managers_list is not None and len(reporting_managers_list) > 0:
             return jsonify(
                 {
                     "code": 200,
@@ -27,12 +27,12 @@ def create_employees_blueprint(employees_service, wfh_requests_service, withdraw
         ), 404
     
     # Get list of all reporting_managers that report to input manager - Manager
-    @employees_blueprint.route('/reporting_managers__under_me_list/<int:reporting_manager_id_num>', methods=['GET'])
+    @employees_blueprint.route('/reporting_managers_under_me_list/<int:reporting_manager_id_num>', methods=['GET'])
     def get_reporting_managers_under_me(reporting_manager_id_num):
         # Get employee objects of all reporting_managers
         reporting_managers_list = employees_service.get_reporting_managers_under_me(reporting_manager_id_num)
 
-        if len(reporting_managers_list):
+        if reporting_managers_list is not None and len(reporting_managers_list) > 0:
             return jsonify(
                 {
                     "code": 200,
