@@ -31,10 +31,10 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
         ), 404
 
     # Get all wfh_requests from specific team by reporting_manager_id_num
-    @wfh_requests_blueprint.route("/team/<int:reporting_manager_id_num>", methods=['GET'])
-    def get_wfh_requests_by_team(reporting_manager_id_num):
+    @wfh_requests_blueprint.route("/team/<int:reporting_manager_id_num>/<string:status>", methods=['GET'])
+    def get_wfh_requests_by_team(reporting_manager_id_num, status):
         team_manager, team_list = employees_service.find_by_team(reporting_manager_id_num)
-        team_requests_list = wfh_requests_service.find_by_employees(team_list)
+        team_requests_list = wfh_requests_service.find_by_employees(team_list, status)
 
         if len(team_requests_list) > 0:
             return jsonify(
@@ -54,8 +54,30 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
             }
         ), 404
 
+    # Get all wfh_requests of staff by staff_id_num from wfh_requests table
+    @wfh_requests_blueprint.route("/staff_id/<int:staff_id_num>/<string:status>", methods=['GET'])
+    def get_wfh_requests_by_staff_id(staff_id_num, status):
+        staff_requests_list = wfh_requests_service.find_by_staff_id(staff_id_num, status)
+
+        if len(staff_requests_list):
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": {
+                        "staff_id": staff_id_num,
+                        "requests": [wfh_request.json() for wfh_request in staff_requests_list]
+                    }
+                }
+            ), 200
+        return jsonify(
+            {
+                "code": 404,
+                "message": "Employee with that ID number is not found."
+            }
+        ), 404
+
     # Route to apply for WFH arrangement
-    @wfh_requests_blueprint.route('/apply', methods=['POST'])
+    @wfh_requests_blueprint.route('/apply_wfh_request', methods=['POST'])
     def apply_for_wfh_request():
         data = request.json
         staff_id = data.get("staff_id")
@@ -67,6 +89,7 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
         status = "Pending"
         remarks = data.get("remarks")
         recurring_id = data.get("recurring_id")
+        reason_for_status = None
 
         if not all([staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, remarks]):
             return jsonify({"error": "Missing required fields"}), 400
@@ -77,7 +100,7 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
         
         if recurring_id == -1:
             # Call the service function
-            response, status_code = wfh_requests_service.apply_wfh(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id)
+            response, status_code = wfh_requests_service.apply_wfh(staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id, reason_for_status)
         else:
             # Init the reccurring_id to be recorded for the requests
             max_recurring_id = wfh_requests_service.get_max_recurring_id()  # Implement this in your service
@@ -96,7 +119,7 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
             # Loop while the specified date less than end_date
             while chosen_date <= end_date:
                 response, status_code = wfh_requests_service.apply_wfh(
-                    staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id
+                    staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id, reason_for_status
                 )
                 returnDict["responses"].append(response)
                 returnDict["status_codes"].append(status_code)
@@ -108,44 +131,21 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
 
         # Return the response from the service
         return jsonify(response), status_code
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # Route for Manager to view pending WFH requests
-    @wfh_requests_blueprint.route('/pending_wfh_requests', methods=['GET'])
-    def get_pending_wfh_requests_of_own_team():
-        manager_id = request.args.get("manager_id")
-
-        # Validate the manager_id parameter
-        if not manager_id:
-            return jsonify({"error": "Manager ID is required"}), 400
-        
-        # Call the service function
-        requests_data, status_code = wfh_requests_service.view_pending_wfh_requests(manager_id)
-
-        # Return the response based on the service's return values
-        return jsonify(requests_data), status_code
         
     # Route for Manager to approve WFH requests
     @wfh_requests_blueprint.route('/approve_wfh_request', methods=['PUT'])
     def approve_pending_wfh_request():
         data = request.json
         request_id = data.get('request_id')
-        manager_id = data.get('manager_id')
+        manager_id = data.get('reporting_manager')
+        reason_for_status = data.get('reason_for_status')
 
-        response, status_code = wfh_requests_service.approve_wfh_request(request_id, manager_id)
+        recurring_id = data.get('recurring_id')
+        if recurring_id == -1:
+            response, status_code = wfh_requests_service.approve_wfh_request(request_id, manager_id, reason_for_status)
+            return jsonify(response), status_code
+        
+        response, status_code = wfh_requests_service.approve_recurring_wfh_requests(recurring_id, reason_for_status)
         return jsonify(response), status_code
 
     # Route for Manager to reject WFH requests
@@ -153,13 +153,37 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
     def reject_pending_wfh_request():
         data = request.json
         request_id = data.get('request_id')
-        rejection_reason = data.get('rejection_reason')
+        rejection_reason = data.get('reason_for_status')
 
         if not request_id or not rejection_reason:
             return jsonify({"error": "Request ID and rejection reason are required"}), 400
         
-        response, status_code = wfh_requests_service.reject_wfh_request(request_id, rejection_reason)
+        recurring_id = data.get('recurring_id')
+        if recurring_id == -1:
+            response, status_code = wfh_requests_service.reject_wfh_request(request_id, rejection_reason)
+            return jsonify(response), status_code
+        
+        response, status_code = wfh_requests_service.reject_recurring_wfh_requests(recurring_id, rejection_reason)
         return jsonify(response), status_code
+
+    # Withdraw a wfh_request by request_id_num from wfh_requests table
+    @wfh_requests_blueprint.route("/withdraw_wfh_request", methods=['PUT'])
+    def withdraw_wfh_request():
+        data = request.json
+        request_id = data.get('request_id')
+        wihdrawal_reason = data.get('reason_for_status')
+
+        if not request_id or not wihdrawal_reason:
+            return jsonify({"error": "Request ID and withdrawal reason are required"}), 400
+
+        response, status_code = wfh_requests_service.withdraw_wfh_request(request_id, wihdrawal_reason)
+        return jsonify(response), status_code
+
+#####################################################################################################################
+#                                                                                                                   #
+#                                                UNUSED ROUTES                                                      #
+#                                                                                                                   #
+#####################################################################################################################
 
     # Get all wfh_requests from wfh_requests table
     @wfh_requests_blueprint.route('/<string:status>', methods=['GET'])
@@ -201,55 +225,21 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
             }
         ), 404
 
-    # Get all wfh_requests of staff by staff_id_num from wfh_requests table
-    @wfh_requests_blueprint.route("/staff_id/<int:staff_id_num>", methods=['GET'])
-    def get_wfh_requests_by_staff_id(staff_id_num):
-        staff_requests_list = wfh_requests_service.find_by_staff_id(staff_id_num)
 
-        if len(staff_requests_list):
-            return jsonify(
-                {
-                    "code": 200,
-                    "data": {
-                        "staff_id": staff_id_num,
-                        "requests": [wfh_request.json() for wfh_request in staff_requests_list]
-                    }
-                }
-            ), 200
-        return jsonify(
-            {
-                "code": 404,
-                "message": "Employee with that ID number is not found."
-            }
-        ), 404
+    # # Route for Manager to view pending WFH requests
+    # @wfh_requests_blueprint.route('/pending_wfh_requests', methods=['GET'])
+    # def get_pending_wfh_requests_of_own_team():
+    #     manager_id = request.args.get("manager_id")
 
-    # Delete a wfh_request by request_id_num from wfh_requests table
-    @wfh_requests_blueprint.route("/withdraw/request_id/<int:request_id_num>", methods=['DELETE'])
-    def withdraw_request_by_id(request_id_num):
-        status_code, error_message = wfh_requests_service.delete_wfh_request(request_id_num)
+    #     # Validate the manager_id parameter
+    #     if not manager_id:
+    #         return jsonify({"error": "Manager ID is required"}), 400
+        
+    #     # Call the service function
+    #     requests_data, status_code = wfh_requests_service.view_pending_wfh_requests(manager_id)
 
-        if status_code == 404:
-            return jsonify(
-                {
-                    "code": 404,
-                    "message": f"Work-from-home request with ID number:{request_id_num} not found."
-                }
-            ), 404
-        elif status_code == 200:
-            return jsonify(
-                {
-                    "code": 200,
-                    "message": f"Work-from-home request with ID number:{request_id_num} successfully deleted."
-                }
-            ), 200
-        else:
-            return jsonify(
-                {
-                    "code": 500,
-                    "message": "An error occurred while deleting the work-from-home request.",
-                    "error": str(error_message)
-                }
-            ), 500
+    #     # Return the response based on the service's return values
+    #     return jsonify(requests_data), status_code
         
     # # DEPRECATED - Route for Manager to view employees reporting to them 
     # @wfh_requests_blueprint.route('/get_manager_team/<int:manager_id>', methods=['GET'])

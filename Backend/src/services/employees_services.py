@@ -15,11 +15,25 @@ class Employees_Service:
 
         # Retrieve all employee objects using the reporting_manager_ids
         reporting_manager_objects = self.db.session.query(Employees).filter(
-                                        Employees.staff_id.in_(reporting_managers_ids)
-                                    ).all()
+            Employees.staff_id.in_(reporting_managers_ids)
+        ).all()
 
         return reporting_manager_objects
 
+    # Get list of reporting_managers that report to input manager - Manager
+    def get_reporting_managers_under_me(self, reporting_manager_id_num):
+        # Retrieve all distinct reporting_manager_ids
+        reporting_managers_ids = self.db.session.scalars(
+            self.db.select(Employees.reporting_manager).distinct()
+        ).all()
+
+        # Retrieve all employee objects using the reporting_manager_ids that have the reporting_manager == reporting_manager_id_num
+        reporting_manager_objects = self.db.session.query(Employees).filter(
+            Employees.staff_id.in_(reporting_managers_ids),
+            Employees.reporting_manager == reporting_manager_id_num
+        ).all()
+
+        return reporting_manager_objects
 
     # Get all employees in a specific team from Employee table
     def find_by_team(self, reporting_manager_id_num):
@@ -53,14 +67,11 @@ class Employees_Service:
 
         return team_size
 
-
-
-
-
-
-
-
-
+#####################################################################################################################
+#                                                                                                                   #
+#                                                UNUSED SERVICES                                                    #
+#                                                                                                                   #
+#####################################################################################################################
 
     # Get all employees from Employees table
     def get_all(self):
