@@ -55,7 +55,7 @@ class Withdrawal_Requests_Service:
             employee = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.staff_id).first()
 
             # Send the email notification using mailersend
-            # newRequestEmailNotif(reporting_manager, employee, withdrawal_request)
+            newWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_request)
 
             return {"message": "Withdrawal request submitted successfully!"}, 200
 
@@ -105,7 +105,7 @@ class Withdrawal_Requests_Service:
         employee = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.staff_id).first()
 
         # Send the email notification
-        # approvalOrRejectionEmailNotif(reporting_manager, employee, withdrawal_request)
+        approvalOrRejectionWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_request)
 
         return {"message": "Withdrawal request approved and WFH requests withdrawn successfully!"}, 200
     
@@ -128,7 +128,7 @@ class Withdrawal_Requests_Service:
             employee = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.staff_id).first()
 
             # Send the email notification using mailersend
-            # approvalOrRejectionEmailNotif(reporting_manager, employee, withdrawal_request)
+            approvalOrRejectionWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_request)
 
             return {"message": "Withdrawal request rejected successfully!"}, 200
 
