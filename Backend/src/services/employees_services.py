@@ -38,8 +38,7 @@ class Employees_Service:
     # Get all employees in a specific team from Employee table
     def find_by_team(self, reporting_manager_id_num):
         team_manager = self.db.session.scalars(
-            self.db.select(Employees).filter_by(staff_id=reporting_manager_id_num).
-            limit(1)
+            self.db.select(Employees).filter_by(staff_id=reporting_manager_id_num)
         ).first()
 
         if not team_manager:

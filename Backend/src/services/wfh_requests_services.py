@@ -80,7 +80,7 @@ class WFH_Requests_Service:
             employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
 
             # Send the email notification using mailersend
-            newRequestEmailNotif(reporting_manager, employee, wfh_request)
+            newWFHRequestEmailNotif(reporting_manager, employee, wfh_request)
 
             return {"message": "WFH request submitted successfully!"}, 200
 
@@ -106,42 +106,41 @@ class WFH_Requests_Service:
         # No conflicts found, return True
         return True
 
-
-
     def get_max_recurring_id(self):
         max_id = self.db.session.query(self.db.func.max(WFH_Requests.recurring_id)).scalar()
         return max_id
 
     # Service for Manager to approve WFH requests
     def approve_wfh_request(self, request_id, manager_id, reason_for_status):
+        try:
+            # Fetch the WFH request by ID
+            wfh_request = self.db.session.query(WFH_Requests).filter_by(request_id=request_id, status='Pending').first()
+            if not wfh_request:
+                return {"error": "No such pending WFH request found"}, 404
+            
+            # Check the manager's team size
+            team_size = self.db.session.query(Employees).filter_by(reporting_manager=manager_id).count()
 
-        # Fetch the WFH request by ID
-        wfh_request = self.db.session.query(WFH_Requests).filter_by(request_id=request_id, status='Pending').first()
-        if not wfh_request:
-            return {"error": "No such pending WFH request found"}, 404
-        
-        # Check the manager's team size
-        team_size = self.db.session.query(Employees).filter_by(reporting_manager=manager_id).count()
+            # Example business logic: enforce 50% team limit
+            wfh_count = self.db.session.query(WFH_Requests).filter_by(status='Approved').count()
+            if wfh_count / team_size > 0.5:
+                return {"error": "More than 50 percent of the team is already working from home"}, 400
 
-        # Example business logic: enforce 50% team limit
-        wfh_count = self.db.session.query(WFH_Requests).filter_by(status='Approved').count()
+            # Approve the request if within limits
+            wfh_request.status = 'Approved'
+            wfh_request.reason_for_status = reason_for_status
+            self.db.session.commit()
 
-        # if wfh_count / team_size > 0.5:
-        #     return {"error": "More than 50 percent of the team is already working from home"}, 400
+            # Retrieve information needed to populate email content
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
 
-        # Approve the request if within limits
-        wfh_request.status = 'Approved'
-        wfh_request.reason_for_status = reason_for_status
-        self.db.session.commit()
+            # Send the email notification using mailersend
+            approvalOrRejectionWFHRequestEmailNotif(reporting_manager, employee, wfh_request)
 
-        # Retrieve information needed to populate email content
-        reporting_manager: Optional[Employees] = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
-        employee: Optional[Employees] = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
-        
-        # Send the email notification using mailersend
-        approvalOrRejectionEmailNotif(reporting_manager, employee, wfh_request)
-
-        return {"message": "WFH request approved successfully!"}, 200
+            return {"message": "WFH request approved successfully!"}, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
         
     # Service for Manager to reject WFH requests
     def reject_wfh_request(self, request_id, rejection_reason):
@@ -162,7 +161,7 @@ class WFH_Requests_Service:
             employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
 
             # Send the email notification using mailersend
-            approvalOrRejectionEmailNotif(reporting_manager, employee, wfh_request)
+            approvalOrRejectionWFHRequestEmailNotif(reporting_manager, employee, wfh_request)
 
             return {"message": "WFH request withdrawn successfully!"}, 200
 
@@ -179,6 +178,11 @@ class WFH_Requests_Service:
                 WFH_Requests.status.in_(['Approved', 'Pending'])
             ).first()
 
+            # Check if manager or staff
+            flag = False
+            if wfh_request.status == "Approved":
+                flag = True
+
             if not wfh_request:
                 return {"error": "No such approved/pending WFH request found"}, 404
 
@@ -191,8 +195,9 @@ class WFH_Requests_Service:
             reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
             employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
 
-            # Send the email notification using mailersend
-            approvalOrRejectionEmailNotif(reporting_manager, employee, wfh_request)
+            # Send the email notification if manager withdraw approved req
+            if flag:
+                withdrawWFHRequestEmailNotif(reporting_manager, employee, wfh_request)
 
             return {"message": "WFH request withdrawn successfully!"}, 200
 
@@ -205,6 +210,17 @@ class WFH_Requests_Service:
             # Update all requests with the same recurring_id to "Approved"
             self.db.session.query(WFH_Requests).filter(WFH_Requests.recurring_id == recurring_id).update({"status": "Approved", "reason_for_status": reason_for_status})
             self.db.session.commit()
+
+            # Get all requests that were updated
+            requests_list = self.db.session.query(WFH_Requests).filter(WFH_Requests.recurring_id == recurring_id).all()
+
+            # Retrieve information needed to populate email content
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=requests_list[0].reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=requests_list[0].staff_id).first()
+            for req in requests_list:
+                # Send the email notification
+                approvalOrRejectionWFHRequestEmailNotif(reporting_manager, employee, req)
+
             return {"message": "All recurring requests approved successfully"}, 200
         except Exception as e:
             self.db.session.rollback()
@@ -216,6 +232,17 @@ class WFH_Requests_Service:
             # Update all requests with the same recurring_id to "Rejected"
             self.db.session.query(WFH_Requests).filter(WFH_Requests.recurring_id == recurring_id).update({"status": "Rejected", "reason_for_status": reason_for_status})
             self.db.session.commit()
+
+            # Get all requests that were updated
+            requests_list = self.db.session.query(WFH_Requests).filter(WFH_Requests.recurring_id == recurring_id).all()
+
+            # Retrieve information needed to populate email content
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=requests_list[0].reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=requests_list[0].staff_id).first()
+            for req in requests_list:
+                # Send the email notification using mailersend
+                approvalOrRejectionWFHRequestEmailNotif(reporting_manager, employee, req)
+
             return {"message": "All recurring requests rejected successfully"}, 200
         except Exception as e:
             self.db.session.rollback()

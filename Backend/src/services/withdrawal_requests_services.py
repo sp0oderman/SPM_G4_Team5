@@ -23,7 +23,7 @@ class Withdrawal_Requests_Service:
 
     # Get all withdrawal_requests of staff by staff_id_num from withdrawal_requests table
     def find_by_staff_id(self, staff_id_num, status):
-        if status != "all":
+        if status != "All":
             staff_requests_list = self.db.session.query(Withdrawal_Requests).filter(
                 and_(
                     Withdrawal_Requests.staff_id == staff_id_num,
@@ -37,18 +37,67 @@ class Withdrawal_Requests_Service:
                 ).all()
         
         return staff_requests_list
+
+    # Apply withdrawal_request
+    def apply_withdrawal(self, staff_id, reporting_manager, wfh_request_id, request_datetime, status, remarks):
+        try:
+            # Insert the new Withdrawal request
+            new_request = Withdrawal_Requests(staff_id, reporting_manager, wfh_request_id, request_datetime, status, remarks, reason_for_status=None)
+            self.db.session.add(new_request)
+            self.db.session.commit()
+            
+            # Retrieve the generated request_id
+            request_id = new_request.request_id
+
+            # Send email notification of the new withdrawal Request to Reporting Manager
+            withdrawal_request = self.db.session.query(Withdrawal_Requests).filter_by(request_id=request_id).first()
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.staff_id).first()
+
+            # Send the email notification using mailersend
+            newWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_request)
+
+            return {"message": "Withdrawal request submitted successfully!"}, 200
+
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    # Helper function to see if can apply for withdrawal
+    def can_apply_withdrawal(self, staff_id, wfh_request_id):
+        # Retrieve all Withdrawal requests for the given staff member of the with specific wfh_request_id
+        staff_requests_list = self.db.session.query(Withdrawal_Requests).filter(
+            Withdrawal_Requests.staff_id == staff_id,
+            Withdrawal_Requests.wfh_request_id == wfh_request_id,
+            Withdrawal_Requests.status.in_(["Pending", "Approved"])
+        ).all()
+
+        # If any results are found, then there are conflcits
+        if staff_requests_list:
+            return False
+        # No conflicts found, return True
+        return True
     
     # Approve withdrawal_requests
-    def approve_withdrawal_request(self, request_id, reason_for_status):
+    def approve_withdrawal_request(self, withdrawal_request_id, reason_for_status):
 
         # Fetch the withdrawal request by ID
-        withdrawal_request = self.db.session.query(Withdrawal_Requests).filter_by(request_id=request_id, status='Pending').first()
+        withdrawal_request = self.db.session.query(Withdrawal_Requests).filter_by(request_id=withdrawal_request_id, status='Pending').first()
         if not withdrawal_request:
             return {"error": "No pending withdrawal request found"}, 404
+        
+        # Fetch the corresponding approved wfh_request
+        wfh_request = self.db.session.query(WFH_Requests).filter_by(request_id=withdrawal_request.wfh_request_id, status='Approved').first()
+        if not wfh_request:
+            return {"error": "No approved wfh request found"}, 404
 
         # Approve the request if within limits
         withdrawal_request.status = 'Approved'
         withdrawal_request.reason_for_status = reason_for_status
+
+        # Adjust the corresponding wfh request
+        wfh_request.status = 'Withdrawn'
+        wfh_request.reason_for_status = reason_for_status
+
         self.db.session.commit()
 
         # Retrieve information needed to populate email content
@@ -56,18 +105,18 @@ class Withdrawal_Requests_Service:
         employee = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.staff_id).first()
 
         # Send the email notification
-        approvalOrRejectionEmailNotif(reporting_manager, employee, withdrawal_request)
+        approvalOrRejectionWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_request)
 
-        return {"message": "Withdrawal request approved successfully!"}, 200
+        return {"message": "Withdrawal request approved and WFH requests withdrawn successfully!"}, 200
     
     # Reject Withdrawal requests
-    def reject_withdrawal_request(self, request_id, rejection_reason):
+    def reject_withdrawal_request(self, withdrawal_request_id, rejection_reason):
         try:
 
             # Retrieve the withdrawal request by ID
-            withdrawal_request = self.db.session.query(Withdrawal_Requests).filter_by(request_id=request_id, status='Pending').first()
+            withdrawal_request = self.db.session.query(Withdrawal_Requests).filter_by(request_id=withdrawal_request_id, status='Pending').first()
             if not withdrawal_request:
-                return {"error": "No pending WFH request found"}, 404
+                return {"error": "No pending Withdrawal request found"}, 404
 
             # Reject the withdrawal request
             withdrawal_request.status = 'Rejected'
@@ -79,18 +128,11 @@ class Withdrawal_Requests_Service:
             employee = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.staff_id).first()
 
             # Send the email notification using mailersend
-            approvalOrRejectionEmailNotif(reporting_manager, employee, withdrawal_request)
+            approvalOrRejectionWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_request)
 
             return {"message": "Withdrawal request rejected successfully!"}, 200
 
         except Exception as e:
             return {"error": str(e)}, 500
-        
-    # Get all withdrawal_requests of staff by staff_id_num
-    def find_by_staff_id(self, staff_id_num):
-        staff_requests_list = self.db.session.scalars(
-            self.db.select(Withdrawal_Requests).filter_by(staff_id=staff_id_num)
-            ).all()
-        
-        return staff_requests_list
+    
         
