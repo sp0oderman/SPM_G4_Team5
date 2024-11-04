@@ -3,7 +3,8 @@
     <v-expansion-panel
       v-for="request in requests"
       :key="request.id"
-    >
+      >
+      
       <v-expansion-panel-title>
         Request from {{ request.staff_id }}
       </v-expansion-panel-title>
@@ -17,18 +18,10 @@
       
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn
-          color="secondary"
-          variant="text"
-          @click="openRejectDialog(request.id)"
-        >
+        <v-btn color="secondary" variant="text" @click="openRejectDialog(request.id)">
           Reject
         </v-btn>
-        <v-btn
-          color="primary"
-          variant="text"
-          @click="acceptRequest(request.id)"
-        >
+        <v-btn color="primary" variant="text" @click="acceptRequest(request.id)">
           Accept
         </v-btn>
       </v-card-actions>

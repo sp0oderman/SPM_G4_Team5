@@ -1,5 +1,5 @@
 <template>
-    <HRMenuBar/>
+    <CEOMenuBar/>
     <HRCalendar/>
 </template>
   
