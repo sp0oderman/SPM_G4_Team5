@@ -158,13 +158,13 @@ class WFH_Requests_Service:
             self.db.session.commit()
 
             # Retrieve information needed to populate email content
-            reporting_manager: Optional[Employees] = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
-            employee: Optional[Employees] = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
 
             # Send the email notification using mailersend
             approvalOrRejectionEmailNotif(reporting_manager, employee, wfh_request)
 
-            return {"message": "WFH request rejected successfully!"}, 200
+            return {"message": "WFH request withdrawn successfully!"}, 200
 
         except Exception as e:
             return {"error": str(e)}, 500
