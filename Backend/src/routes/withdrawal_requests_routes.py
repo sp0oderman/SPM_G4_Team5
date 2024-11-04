@@ -29,6 +29,27 @@ def create_withdrawal_requests_blueprint(employees_service, wfh_requests_service
             }
         ), 404
     
+    # Get withdrawal requests by staff_id
+    @withdrawal_requests_blueprint.route("/staff_id/<int:staff_id_num>/<string:status>", methods=['GET'])
+    def get_wfh_requests_by_staff_id(staff_id_num, status):
+        staff_requests_list = withdrawal_requests_service.find_by_staff_id(staff_id_num, status)
+        if len(staff_requests_list):
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": {
+                        "staff_id": staff_id_num,
+                        "requests": [withdrawal_request.json() for withdrawal_request in staff_requests_list]
+                    }
+                }
+            ), 200
+        return jsonify(
+            {
+                "code": 404,
+                "message": "Employee with that ID number is not found."
+            }
+        ), 404
+
     # Staff apply to withdraw an approved request
     @withdrawal_requests_blueprint.route("/apply_withdrawal_request", methods=['POST'])
     def apply_withdrawal_request():
@@ -39,7 +60,6 @@ def create_withdrawal_requests_blueprint(employees_service, wfh_requests_service
         request_datetime = data.get("request_datetime") or datetime.now()
         status = "Pending"
         remarks = data.get("remarks")
-        reason_for_status = None
 
         if not all([staff_id, reporting_manager, wfh_request_id, remarks]):
             return jsonify({"error": "Missing required fields"}), 400
@@ -47,8 +67,8 @@ def create_withdrawal_requests_blueprint(employees_service, wfh_requests_service
         if not withdrawal_requests_service.can_apply_withdrawal(staff_id, wfh_request_id):
             return jsonify({"error": "You have conflicting dates"}), 400
 
-        response, status_code = wfh_requests_service.apply_wfh(
-            staff_id, reporting_manager, dept, chosen_date, arrangement_type, request_datetime, status, remarks, recurring_id
+        response, status_code = withdrawal_requests_service.apply_withdrawal(
+            staff_id, reporting_manager, wfh_request_id, request_datetime, status, remarks
         )
         return jsonify(response), status_code
 
@@ -74,27 +94,6 @@ def create_withdrawal_requests_blueprint(employees_service, wfh_requests_service
 
         response, status_code = wfh_requests_service.reject_withdrawal_request(request_id, reason_for_status)
         return jsonify(response), status_code
-    
-    # Get withdrawal requests by staff_id
-    @withdrawal_requests_blueprint.route("/staff_id/<int:staff_id_num>/<string:status>", methods=['GET'])
-    def get_wfh_requests_by_staff_id(staff_id_num, status):
-        staff_requests_list = withdrawal_requests_service.find_by_staff_id(staff_id_num, status)
-        if len(staff_requests_list):
-            return jsonify(
-                {
-                    "code": 200,
-                    "data": {
-                        "staff_id": staff_id_num,
-                        "requests": [withdrawal_request.json() for withdrawal_request in staff_requests_list]
-                    }
-                }
-            ), 200
-        return jsonify(
-            {
-                "code": 404,
-                "message": "Employee with that ID number is not found."
-            }
-        ), 404
 
         
     return withdrawal_requests_blueprint

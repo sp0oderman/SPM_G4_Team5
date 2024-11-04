@@ -106,8 +106,6 @@ class WFH_Requests_Service:
         # No conflicts found, return True
         return True
 
-
-
     def get_max_recurring_id(self):
         max_id = self.db.session.query(self.db.func.max(WFH_Requests.recurring_id)).scalar()
         return max_id

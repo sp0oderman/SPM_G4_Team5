@@ -23,7 +23,7 @@ class Withdrawal_Requests_Service:
 
     # Get all withdrawal_requests of staff by staff_id_num from withdrawal_requests table
     def find_by_staff_id(self, staff_id_num, status):
-        if status != "all":
+        if status != "All":
             staff_requests_list = self.db.session.query(Withdrawal_Requests).filter(
                 and_(
                     Withdrawal_Requests.staff_id == staff_id_num,
@@ -37,6 +37,45 @@ class Withdrawal_Requests_Service:
                 ).all()
         
         return staff_requests_list
+
+    # Apply withdrawal_request
+    def apply_withdrawal(self, staff_id, reporting_manager, wfh_request_id, request_datetime, status, remarks):
+        try:
+            # Insert the new Withdrawal request
+            new_request = Withdrawal_Requests(staff_id, reporting_manager, wfh_request_id, request_datetime, status, remarks, reason_for_status=None)
+            self.db.session.add(new_request)
+            self.db.session.commit()
+            
+            # Retrieve the generated request_id
+            request_id = new_request.request_id
+
+            # Send email notification of the new WFH Request to Reporting Manager
+            withdrawal_request = self.db.session.query(Withdrawal_Requests).filter_by(request_id=request_id).first()
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=withdrawal_request.staff_id).first()
+
+            # Send the email notification using mailersend
+            newRequestEmailNotif(reporting_manager, employee, withdrawal_request)
+
+            return {"message": "WFH request submitted successfully!"}, 200
+
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    # Helper function to see if can apply for withdrawal
+    def can_apply_withdrawal(self, staff_id, wfh_request_id):
+        # Retrieve all WFH requests for the given staff member on the chosen date
+        staff_requests_list = self.db.session.query(Withdrawal_Requests).filter(
+            Withdrawal_Requests.staff_id == staff_id,
+            Withdrawal_Requests.wfh_request_id == wfh_request_id,
+            Withdrawal_Requests.status.in_(["Pending", "Approved"])
+        ).all()
+
+        # If any results are found, then there are conflcits
+        if staff_requests_list != None:
+            return False
+        # No conflicts found, return True
+        return True
     
     # Approve withdrawal_requests
     def approve_withdrawal_request(self, request_id, reason_for_status):
@@ -45,10 +84,20 @@ class Withdrawal_Requests_Service:
         withdrawal_request = self.db.session.query(Withdrawal_Requests).filter_by(request_id=request_id, status='Pending').first()
         if not withdrawal_request:
             return {"error": "No pending withdrawal request found"}, 404
+        
+        # Fetch the corresponding wfh_request
+        wfh_request = self.db.session.query(WFH_Requests).filter_by(wfh_request_id=withdrawal_request.wfh_request_id, status='Pending').first()
+        if not wfh_request:
+            return {"error": "No approved wfh request found"}, 404
 
         # Approve the request if within limits
         withdrawal_request.status = 'Approved'
         withdrawal_request.reason_for_status = reason_for_status
+
+        # Adjust the corresponding wfh request
+        wfh_request.status = 'Withdrawn'
+        wfh_request.reason_for_status = reason_for_status
+
         self.db.session.commit()
 
         # Retrieve information needed to populate email content
@@ -58,7 +107,7 @@ class Withdrawal_Requests_Service:
         # Send the email notification
         approvalOrRejectionEmailNotif(reporting_manager, employee, withdrawal_request)
 
-        return {"message": "Withdrawal request approved successfully!"}, 200
+        return {"message": "Withdrawal request approved and WFH requests withdrawn successfully!"}, 200
     
     # Reject Withdrawal requests
     def reject_withdrawal_request(self, request_id, rejection_reason):
