@@ -64,3 +64,35 @@ class Employees_Service:
             ).first()
         
         return employee
+    
+    # Helper function to recursively get all subordinates of inputted staff_id
+    def get_all_subordinates(self, staff_id_num, visited):
+
+        # Check for CEO
+        if staff_id_num == 130002:
+            return self.db.session.scalars(self.db.select(Employees)).all()
+
+        # Initialize the visited set to track managers we've already processed to avoid infinite loops
+        if visited is None:
+            visited = set()
+
+        # Stop condition: If this reporting manager has already been processed, return an empty list
+        if staff_id_num in visited:
+            return []
+
+        # Mark this manager as visited
+        visited.add(staff_id_num)
+
+        # Get all requests for the given team (department and reporting manager)
+        team_list = self.db.session.scalars(
+            self.db.select(Employees).filter_by(reporting_manager=staff_id_num)
+        ).all()
+
+        # Accumulator for recursively collected team requests
+        full_team_list = team_list[:]
+
+        # Recursively get all the team members under this reporting manager
+        for member in team_list:
+            full_team_list.extend(self.get_all_subordinates(member.staff_id, visited))
+
+        return full_team_list
