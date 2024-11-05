@@ -6,7 +6,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 
 import unittest
 from unittest.mock import MagicMock, patch
-from datetime import datetime
 from src.services.withdrawal_requests_services import Withdrawal_Requests_Service
 from src.models.withdrawal_requests import Withdrawal_Requests
 from src.models.wfh_requests import WFH_Requests
@@ -63,9 +62,8 @@ class TestWithdrawalRequestsService(unittest.TestCase):
         self.assertEqual(result[0].staff_id, 1)
         self.assertEqual(result[0].status, "Pending")
 
-    @patch("src.utils.email_functions.newWithdrawalRequestEmailNotif")
-    def test_apply_withdrawal(self, mock_email_notif):
-        # Mock new request and email notification
+    def test_apply_withdrawal(self):
+        # Mock database session methods
         self.db.session.add = MagicMock()
         self.db.session.commit = MagicMock()
 
@@ -74,17 +72,23 @@ class TestWithdrawalRequestsService(unittest.TestCase):
             staff_id=1, reporting_manager=2, wfh_request_id=10, request_datetime="2024-01-01",
             status="Pending", remarks="Request to withdraw WFH", reason_for_status=None
         )
-        mock_request.request_id = 123  # Set a mock request_id
+        mock_request.request_id = 1  # Set a mock request_id
 
-        self.db.session.query.return_value.filter_by.return_value.first.return_value = mock_request
+        # Mock employee and reporting manager data
+        mock_reporting_manager = Employees(
+            staff_id=2, staff_fname="Manager", staff_lname="One", dept="Sales", position="Manager",
+            country="Singapore", email="manager.one@example.com", reporting_manager=None, role=1
+        )
+        mock_employee = Employees(
+            staff_id=1, staff_fname="Employee", staff_lname="One", dept="Sales", position="Rep",
+            country="Singapore", email="employee.one@example.com", reporting_manager=2, role=2
+        )
 
-        # Mock employee data if needed
-        mock_reporting_manager = MagicMock()
-        mock_employee = MagicMock()
+        # Set up the side effects for query
         self.db.session.query.side_effect = [
-            MagicMock(return_value=mock_request),
-            MagicMock(return_value=mock_reporting_manager),
-            MagicMock(return_value=mock_employee)
+            MagicMock(return_value=mock_request),          # First query returns the withdrawal request
+            MagicMock(return_value=mock_reporting_manager), # Second query returns the reporting manager
+            MagicMock(return_value=mock_employee)          # Third query returns the employee
         ]
 
         # Call the method
@@ -93,14 +97,13 @@ class TestWithdrawalRequestsService(unittest.TestCase):
             reporting_manager=2,
             wfh_request_id=10,
             request_datetime="2024-01-01",
-            status="Approved",
+            status="Pending",
             remarks="Request to withdraw WFH"
         )
 
         # Assertions
         self.assertEqual(status_code, 200)
         self.assertEqual(response["message"], "Withdrawal request submitted successfully!")
-        #mock_email_notif.assert_called_once()
 
 
     def test_can_apply_withdrawal_no_conflict(self):
@@ -127,8 +130,7 @@ class TestWithdrawalRequestsService(unittest.TestCase):
         # Assertions
         self.assertFalse(result)
 
-    @patch("src.utils.email_functions.approvalOrRejectionWithdrawalRequestEmailNotif")
-    def test_approve_withdrawal_request(self, mock_email_notif):
+    def test_approve_withdrawal_request(self):
         # Mock withdrawal request, WFH request, and associated employee data
         mock_withdrawal_request = Withdrawal_Requests(
             staff_id=1, reporting_manager=2, wfh_request_id=1, request_datetime="2024-01-01",
@@ -174,12 +176,8 @@ class TestWithdrawalRequestsService(unittest.TestCase):
         self.assertEqual(mock_withdrawal_request.status, "Approved")
         self.assertEqual(mock_withdrawal_request.reason_for_status, "Approved for work")
         self.assertEqual(mock_wfh_request.status, "Withdrawn")
-    
-        # Check if the notification function was called
-        # mock_email_notif.assert_called_once_with(mock_reporting_manager, mock_employee, mock_withdrawal_request)
 
-    @patch("src.utils.email_functions.approvalOrRejectionWithdrawalRequestEmailNotif")
-    def test_reject_withdrawal_request(self, mock_email_notif):
+    def test_reject_withdrawal_request(self):
         # Mock the withdrawal request and associated employee data
         mock_withdrawal_request = Withdrawal_Requests(
             staff_id=1, reporting_manager=2, wfh_request_id=10, request_datetime="2024-01-01",
@@ -216,7 +214,6 @@ class TestWithdrawalRequestsService(unittest.TestCase):
         self.assertEqual(response["message"], "Withdrawal request rejected successfully!")
         self.assertEqual(mock_withdrawal_request.status, "Rejected")
         self.assertEqual(mock_withdrawal_request.reason_for_status, "Not eligible")
-        # mock_email_notif.assert_called_once()
         
 if __name__ == "__main__":
     unittest.main()
