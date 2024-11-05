@@ -26,7 +26,7 @@ def newWFHRequestEmailNotif(reporting_manager, employee, wfh_request):
     email_body = f"""
                 <html><body>
                 <p>Dear {reporting_manager.staff_fname} {reporting_manager.staff_lname},</p>
-                <p>An employee in your team has made a new WFH Request.</p>
+                <p>An employee in your team has made a new WFH request.</p>
                 <p><b><u>WFH Request Details</u></b><br>
                     <b>Employee Name:</b> {employee.staff_fname} {employee.staff_lname}<br>
                     <b>Employee ID:</b> {employee.staff_id}<br>
@@ -38,13 +38,13 @@ def newWFHRequestEmailNotif(reporting_manager, employee, wfh_request):
                     <b>Status:</b> {wfh_request.status}<br>
                     <b>Remarks:</b> {wfh_request.remarks}<br>
                 <p>This is an automated notification.</p>
-                <p>If you have received this notification by accident, please contact the WFH System developers via spmg4t5@gmail.com.</p>
+                <p>If you have received this notification by accident, please contact the WFH System developers via {EMAIL_ACCOUNT}.</p>
                 </body></html>
                 """
 
     message = MIMEMultipart('alternative', None, [MIMEText(email_body, 'html')])
 
-    message['Subject'] = '[WFH System] New WFH application for your review'
+    message['Subject'] = '[WFH System] New WFH request for your review'
     message['From'] = EMAIL_ACCOUNT
     message['To'] = reporting_manager.email
 
@@ -68,7 +68,7 @@ def approvalOrRejectionWFHRequestEmailNotif(reporting_manager, employee, wfh_req
     email_body = f"""
                 <html><body>
                 <p>Dear {employee.staff_fname} {employee.staff_lname},</p>
-                <p>Your WFH Request has been <b><u>{wfh_request.status.lower()}</u></b> by your reporting manager, {reporting_manager.staff_fname} {reporting_manager.staff_lname}.</p>
+                <p>Your WFH request has been <b><u>{wfh_request.status.lower()}</u></b> by your reporting manager, {reporting_manager.staff_fname} {reporting_manager.staff_lname}.</p>
                 <p><b><u>WFH Request Details</u></b><br>
                     <b>Employee ID:</b> {employee.staff_id}<br>
                     <b>Employee Name:</b> {employee.staff_fname} {employee.staff_lname}<br>
@@ -79,13 +79,13 @@ def approvalOrRejectionWFHRequestEmailNotif(reporting_manager, employee, wfh_req
                     <b>Status:</b> {wfh_request.status}<br>
                     <b>Remarks (if any):</b> {wfh_request.remarks}<br>
                 <p>This is an automated notification.</p>
-                <p>If you have received this notification by accident, please contact the WFH System developers via spmg4t5@gmail.com.</p>
+                <p>If you have received this notification by accident, please contact the WFH System developers via {EMAIL_ACCOUNT}.</p>
                 </body></html>
                 """
 
     message = MIMEMultipart('alternative', None, [MIMEText(email_body, 'html')])
 
-    message['Subject'] = f"[WFH System] Notice of {wfh_request.status} WFH Request"
+    message['Subject'] = f"[WFH System] Notice of {wfh_request.status} WFH request"
     message['From'] = EMAIL_ACCOUNT
     message['To'] = employee.email
 
@@ -109,7 +109,7 @@ def withdrawWFHRequestEmailNotif(reporting_manager, employee, wfh_request):
     email_body = f"""
                 <html><body>
                 <p>Dear {employee.staff_fname} {employee.staff_lname},</p>
-                <p>Your previously approved WFH Request has been withdrawn by your reporting manager, {reporting_manager.staff_fname} {reporting_manager.staff_lname}.</p>
+                <p>Your previously approved WFH request has been withdrawn by your reporting manager, {reporting_manager.staff_fname} {reporting_manager.staff_lname}.</p>
                 <p><b><u>WFH Request Details</u></b><br>
                     <b>Employee ID:</b> {employee.staff_id}<br>
                     <b>Employee Name:</b> {employee.staff_fname} {employee.staff_lname}<br>
@@ -120,13 +120,13 @@ def withdrawWFHRequestEmailNotif(reporting_manager, employee, wfh_request):
                     <b>Status:</b> {wfh_request.status}<br>
                     <b>Remarks (if any):</b> {wfh_request.remarks}<br>
                 <p>This is an automated notification.</p>
-                <p>If you have received this notification by accident, please contact the WFH System developers via spmg4t5@gmail.com.</p>
+                <p>If you have received this notification by accident, please contact the WFH System developers via {EMAIL_ACCOUNT}.</p>
                 </body></html>
                 """
 
     message = MIMEMultipart('alternative', None, [MIMEText(email_body, 'html')])
 
-    message['Subject'] = "[WFH System] Notice of withdrawn WFH Request"
+    message['Subject'] = "[WFH System] Notice of withdrawn WFH request"
     message['From'] = EMAIL_ACCOUNT
     message['To'] = employee.email
 
@@ -151,7 +151,7 @@ def newWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_reque
     email_body = f"""
                 <html><body>
                 <p>Dear {reporting_manager.staff_fname} {reporting_manager.staff_lname},</p>
-                <p>An employee in your team has made a new Withdrawal Request.</p>
+                <p>An employee in your team has made a new withdrawal request.</p>
                 <p><b><u>Withdrawal Request Details</u></b><br>
                     <b>Employee Name:</b> {employee.staff_fname} {employee.staff_lname}<br>
                     <b>Employee ID:</b> {employee.staff_id}<br>
@@ -161,7 +161,7 @@ def newWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_reque
                     <b>Status:</b> {withdrawal_request.status}<br>
                     <b>Remarks (if any):</b> {withdrawal_request.remarks}<br>
                 <p>This is an automated notification.</p>
-                <p>If you have received this notification by accident, please contact the WFH System developers via spmg4t5@gmail.com.</p>
+                <p>If you have received this notification by accident, please contact the WFH System developers via {EMAIL_ACCOUNT}.</p>
                 </body></html>
                 """
 
@@ -191,7 +191,7 @@ def approvalOrRejectionWithdrawalRequestEmailNotif(reporting_manager, employee, 
     email_body = f"""
                 <html><body>
                 <p>Dear {employee.staff_fname} {employee.staff_lname},</p>
-                <p>Your Withdrawal Request has been <b><u>{withdrawal_request.status.lower()}</u></b> by your reporting manager, {reporting_manager.staff_fname} {reporting_manager.staff_lname}.</p>
+                <p>Your withdrawal request has been <b><u>{withdrawal_request.status.lower()}</u></b> by your reporting manager, {reporting_manager.staff_fname} {reporting_manager.staff_lname}.</p>
                 <p><b><u>Withdrawal Request Details</u></b><br>
                     <b>Employee ID:</b> {employee.staff_id}<br>
                     <b>Employee Name:</b> {employee.staff_fname} {employee.staff_lname}<br>
@@ -201,13 +201,13 @@ def approvalOrRejectionWithdrawalRequestEmailNotif(reporting_manager, employee, 
                     <b>Status:</b> {withdrawal_request.status}<br>
                     <b>Remarks (if any):</b> {withdrawal_request.remarks}<br>
                 <p>This is an automated notification.</p>
-                <p>If you have received this notification by accident, please contact the WFH System developers via spmg4t5@gmail.com.</p>
+                <p>If you have received this notification by accident, please contact the WFH System developers via {EMAIL_ACCOUNT}.</p>
                 </body></html>
                 """
 
     message = MIMEMultipart('alternative', None, [MIMEText(email_body, 'html')])
 
-    message['Subject'] = f"[WFH System] Notice of {withdrawal_request.status} Withdrawal Request"
+    message['Subject'] = f"[WFH System] Notice of {withdrawal_request.status} WFH withdrawal request"
     message['From'] = EMAIL_ACCOUNT
     message['To'] = employee.email
 
