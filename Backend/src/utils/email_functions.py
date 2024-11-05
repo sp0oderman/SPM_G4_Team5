@@ -2,6 +2,9 @@ import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from dotenv import load_dotenv
 
 # Libraries for email sending
@@ -14,6 +17,9 @@ load_dotenv()
 
 EMAIL_ACCOUNT = os.getenv('EMAIL_ACCOUNT')
 EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
+EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
+
+########################################################################################################################################################################################################################################
 EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 
 ########################################################################################################################################################################################################################################
@@ -31,11 +37,13 @@ def newWFHRequestEmailNotif(reporting_manager, employee, wfh_request):
                     <b>Employee Name:</b> {employee.staff_fname} {employee.staff_lname}<br>
                     <b>Employee ID:</b> {employee.staff_id}<br>
                     <b>Employee ID:</b> {employee.staff_id}<br>
+                    <b>Employee ID:</b> {employee.staff_id}<br>
                     <b>Request ID:</b> {wfh_request.request_id}<br>
                     <b>Arrangement Type:</b> {wfh_request.arrangement_type}<br>
                     <b>Chosen Date:</b> {wfh_request.chosen_date}<br>
                     <b>Time of Request:</b> {wfh_request.request_datetime}<br>
                     <b>Status:</b> {wfh_request.status}<br>
+                    <b>Remarks:</b> {wfh_request.remarks}<br>
                     <b>Remarks:</b> {wfh_request.remarks}<br>
                 <p>This is an automated notification.</p>
                 <p>If you have received this notification by accident, please contact the WFH System developers via {EMAIL_ACCOUNT}.</p>
@@ -55,6 +63,7 @@ def newWFHRequestEmailNotif(reporting_manager, employee, wfh_request):
         server.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
         server.sendmail(EMAIL_ACCOUNT, recipients, message.as_string())
         server.quit()
+        print(f"Email sent: {email_body}")
         print(f"Email sent: {email_body}")
     except Exception as e:
         print(f"Error in sending email: {e}")
@@ -167,6 +176,8 @@ def newWithdrawalRequestEmailNotif(reporting_manager, employee, withdrawal_reque
 
     message = MIMEMultipart('alternative', None, [MIMEText(email_body, 'html')])
 
+    message['Subject'] = '[WFH System] New WFH withdrawal request for your review'
+    message['From'] = EMAIL_ACCOUNT
     message['Subject'] = '[WFH System] New WFH withdrawal request for your review'
     message['From'] = EMAIL_ACCOUNT
     message['To'] = reporting_manager.email
