@@ -13,26 +13,34 @@ class WFH_Requests_Service:
         self.db = db
     
     # Get team strength by given date
-    def get_team_strength_by_date(self, reporting_manager_id, date):
+    def get_team_strength_by_date_range(self, reporting_manager_id, start_date, end_date):
         approved_requests_list = self.db.session.query(WFH_Requests).filter(
-                                    and_(
-                                        WFH_Requests.reporting_manager == reporting_manager_id,
-                                        WFH_Requests.status == "Approved",
-                                        WFH_Requests.chosen_date == date
-                                    )
-                                ).all()
+                and_(
+                    WFH_Requests.reporting_manager == reporting_manager_id,
+                    WFH_Requests.status == "Approved",
+                    WFH_Requests.chosen_date >= start_date,
+                    WFH_Requests.chosen_date <= end_date
+                )
+            ).all()
                                 
         # Initialise dictionary to store strength count
-        strength_dict = {"AM":0, "PM":0}
+        strength_dict = {}
 
         for req in approved_requests_list:
-            if  req.arrangement_type == "Full Day":
-                strength_dict["AM"] += 1
-                strength_dict["PM"] += 1
+            chosen_date_str = str(req.chosen_date)
+    
+            # Initialize nested dictionary for AM/PM if date not already in strength_dict
+            if chosen_date_str not in strength_dict:
+                strength_dict[chosen_date_str] = {"AM": 0, "PM": 0}
+
+            # Increment the count based on arrangement type
+            if req.arrangement_type == "Full Day":
+                strength_dict[chosen_date_str]["AM"] += 1
+                strength_dict[chosen_date_str]["PM"] += 1
             elif req.arrangement_type == "AM":
-                strength_dict["AM"] += 1
+                strength_dict[chosen_date_str]["AM"] += 1
             elif req.arrangement_type == "PM":
-                strength_dict["PM"] += 1
+                strength_dict[chosen_date_str]["PM"] += 1
 
         return strength_dict
 

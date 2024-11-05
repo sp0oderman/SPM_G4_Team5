@@ -5,19 +5,17 @@ from datetime import timedelta ,datetime
 def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withdrawal_requests_service):
     wfh_requests_blueprint = Blueprint('wfh_requests_blueprint', __name__)
 
-    # Get specific team strength by date
-    @wfh_requests_blueprint.route("/team/strength/<int:reporting_manager_id_num>/<string:date>", methods=['GET'])
-    def get_strength_by_team_and_date(reporting_manager_id_num, date):
-        team_strength_dict = wfh_requests_service.get_team_strength_by_date(reporting_manager_id_num, date)
+    # Get specific team strength by date range
+    @wfh_requests_blueprint.route("/team/strength/<int:reporting_manager_id_num>/<string:start_date>/<string:end_date>", methods=['GET'])
+    def get_strength_by_team_and_date_range(reporting_manager_id_num, start_date, end_date):
+        team_strength_dict = wfh_requests_service.get_team_strength_by_date_range(reporting_manager_id_num, start_date, end_date)
 
         if len(team_strength_dict) > 0:
             return jsonify(
                 {
                     "code": 200,
                     "data": {
-                        "date": date,
-                        "AM": team_strength_dict["AM"],
-                        "PM": team_strength_dict["PM"]
+                        "dates": team_strength_dict
                     }
                 }
             ), 200
@@ -90,7 +88,7 @@ def create_wfh_requests_blueprint(employees_service, wfh_requests_service, withd
         recurring_id = data.get("recurring_id")
         reason_for_status = None
 
-        if not all([staff_id, reporting_manager, dept, chosen_date, arrangement_type, remarks]):
+        if not all([staff_id, reporting_manager, dept, chosen_date, arrangement_type, remarks, recurring_id]):
             return jsonify({"error": "Missing required fields"}), 400
 
         # Handle recurring requests
