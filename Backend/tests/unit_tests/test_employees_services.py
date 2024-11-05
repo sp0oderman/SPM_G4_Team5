@@ -62,12 +62,11 @@ class TestEmployeesService(unittest.TestCase):
             email="member.two@example.com", reporting_manager=1, role=2
         )
 
-        # Mock the query calls for the manager and team members separately
-        # Mock for finding the manager by staff_id (returns the manager)
-        self.db.session.query.return_value.filter_by.return_value.first.side_effect = lambda: mock_manager
+        # Mock the query for finding the manager by staff_id
+        self.db.session.scalars.return_value.first.side_effect = lambda: mock_manager
 
-        # Mock for finding all team members under the manager
-        self.db.session.query.return_value.filter_by.return_value.all.side_effect = lambda: [mock_team_member1, mock_team_member2]
+        # Mock the query for finding all team members under the manager
+        self.db.session.scalars.return_value.all.side_effect = lambda: [mock_team_member1, mock_team_member2]
 
         # Call the method under test
         team_manager, team_list = self.service.find_by_team(reporting_manager_id_num=1)
@@ -80,8 +79,9 @@ class TestEmployeesService(unittest.TestCase):
 
     def test_find_by_team_no_manager(self):
         # Mock no manager found
-        self.db.session.query.return_value.filter_by.return_value.first.return_value = None
+        self.db.session.scalars.return_value.first.return_value = None
 
+        # Call the method under test with a non-existing manager ID
         team_manager, team_list = self.service.find_by_team(reporting_manager_id_num=99)
 
         # Assertions
@@ -94,8 +94,8 @@ class TestEmployeesService(unittest.TestCase):
                                   dept="Sales", position="Manager", country="Singapore",
                                   email="john.doe@example.com", reporting_manager=100001, role=3)
         
-        # Configure the mock database session to return the mock employee
-        self.db.session.query.return_value.filter_by.return_value.first.return_value = mock_employee
+        # Configure the mock to return the mock employee when scalars().first() is called
+        self.db.session.scalars.return_value.first.return_value = mock_employee
 
         # Call the method under test
         result = self.service.find_by_staff_id(staff_id_num=1)

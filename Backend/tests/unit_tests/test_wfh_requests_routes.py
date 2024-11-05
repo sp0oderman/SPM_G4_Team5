@@ -1,11 +1,11 @@
-import sys 
-import os 
- 
-# Add the root directory (where the src directory is located) to the system path 
+import sys
+import os
+
+# Add the root directory (where the src directory is located) to the system path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from flask import Flask, jsonify
 from datetime import datetime
 from src.routes.wfh_requests_routes import create_wfh_requests_blueprint
@@ -23,22 +23,25 @@ class TestWFHRequestsBlueprint(unittest.TestCase):
         self.app.register_blueprint(blueprint)
         self.client = self.app.test_client()
 
-    def test_get_strength_by_team_and_date(self):
+    def test_get_strength_by_team_and_date_range(self):
         # Mock response from wfh_requests_service
-        self.wfh_requests_service.get_team_strength_by_date.return_value = {"AM": 3, "PM": 2}
+        self.wfh_requests_service.get_team_strength_by_date_range.return_value = {
+            "2023-12-01": {"AM": 3, "PM": 2},
+            "2023-12-02": {"AM": 1, "PM": 4}
+        }
 
-        response = self.client.get("/wfh_requests/team/strength/1/2023-12-01")
+        response = self.client.get("/team/strength/1/2023-12-01/2023-12-02")
         data = response.get_json()
 
         # Assertions
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data["data"]["AM"], 3)
-        self.assertEqual(data["data"]["PM"], 2)
+        self.assertEqual(data["data"]["dates"]["2023-12-01"]["AM"], 3)
+        self.assertEqual(data["data"]["dates"]["2023-12-02"]["PM"], 4)
 
-    def test_get_strength_by_team_and_date_no_requests(self):
-        self.wfh_requests_service.get_team_strength_by_date.return_value = {}
+    def test_get_strength_by_team_and_date_range_no_requests(self):
+        self.wfh_requests_service.get_team_strength_by_date_range.return_value = {}
 
-        response = self.client.get("/wfh_requests/team/strength/1/2023-12-01")
+        response = self.client.get("/team/strength/1/2023-12-01/2023-12-02")
         data = response.get_json()
 
         # Assertions
@@ -51,7 +54,7 @@ class TestWFHRequestsBlueprint(unittest.TestCase):
         self.employees_service.find_by_team.return_value = ("Manager", [mock_request])
         self.wfh_requests_service.find_by_employees.return_value = [mock_request]
 
-        response = self.client.get("/wfh_requests/team/1/Pending")
+        response = self.client.get("/team/1/Pending")
         data = response.get_json()
 
         # Assertions
@@ -72,7 +75,7 @@ class TestWFHRequestsBlueprint(unittest.TestCase):
         self.wfh_requests_service.can_apply_wfh.return_value = True
         self.wfh_requests_service.apply_wfh.return_value = ({"message": "WFH request submitted successfully!"}, 200)
 
-        response = self.client.post("/wfh_requests/apply_wfh_request", json=data)
+        response = self.client.post("/apply_wfh_request", json=data)
         data = response.get_json()
 
         # Assertions
@@ -91,7 +94,7 @@ class TestWFHRequestsBlueprint(unittest.TestCase):
         }
         self.wfh_requests_service.can_apply_wfh.return_value = False
 
-        response = self.client.post("/wfh_requests/apply_wfh_request", json=data)
+        response = self.client.post("/apply_wfh_request", json=data)
         data = response.get_json()
 
         # Assertions
@@ -102,11 +105,12 @@ class TestWFHRequestsBlueprint(unittest.TestCase):
         data = {
             "request_id": 1,
             "reporting_manager": 2,
-            "reason_for_status": "Approved"
+            "reason_for_status": "Approved",
+            "recurring_id": -1
         }
         self.wfh_requests_service.approve_wfh_request.return_value = ({"message": "WFH request approved successfully!"}, 200)
 
-        response = self.client.put("/wfh_requests/approve_wfh_request", json=data)
+        response = self.client.put("/approve_wfh_request", json=data)
         data = response.get_json()
 
         # Assertions
@@ -116,11 +120,12 @@ class TestWFHRequestsBlueprint(unittest.TestCase):
     def test_reject_pending_wfh_request_single(self):
         data = {
             "request_id": 1,
-            "reason_for_status": "Rejected"
+            "reason_for_status": "Rejected",
+            "recurring_id": -1
         }
         self.wfh_requests_service.reject_wfh_request.return_value = ({"message": "WFH request rejected successfully!"}, 200)
 
-        response = self.client.put("/wfh_requests/reject_wfh_request", json=data)
+        response = self.client.put("/reject_wfh_request", json=data)
         data = response.get_json()
 
         # Assertions
@@ -134,7 +139,7 @@ class TestWFHRequestsBlueprint(unittest.TestCase):
         }
         self.wfh_requests_service.withdraw_wfh_request.return_value = ({"message": "WFH request withdrawn successfully!"}, 200)
 
-        response = self.client.put("/wfh_requests/withdraw_wfh_request", json=data)
+        response = self.client.put("/withdraw_wfh_request", json=data)
         data = response.get_json()
 
         # Assertions
