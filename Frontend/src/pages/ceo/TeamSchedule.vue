@@ -1,9 +1,8 @@
 <template>
-    <ManagerMenuBar/>
+    <CEOMenuBar/>
     <ButtonContainer/>
-    <ManagerCalendar/>
+    <MyTeamCalendar/>
 </template>
   
 <script>
-
 </script>

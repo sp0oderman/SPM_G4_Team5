@@ -1,9 +1,8 @@
 <template>
     <ManagerMenuBar/>
     <ButtonContainer/>
-    <ManagerCalendar/>
+    <ListWithdrawalRequests/>
 </template>
-  
-<script>
 
+<script>
 </script>

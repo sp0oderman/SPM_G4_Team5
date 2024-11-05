@@ -1,7 +1,7 @@
 <template>
     <MenuBar/>
-    <Legend/>
     <PersonalCalendar/>
+    <Legend/>
 </template>
   
 <script>

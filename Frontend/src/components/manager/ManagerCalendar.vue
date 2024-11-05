@@ -22,6 +22,8 @@ export default {
     endDate.setDate(today.getDate() + 1);
 
     return {
+      teamSize: 0,
+      user: useAuthStore().getUser,
       calendarOptions: {
         plugins: [dayGridPlugin, interactionPlugin],
         initialView: 'dayGridMonth',
@@ -35,10 +37,20 @@ export default {
     };
   },
   methods: {
+    async getTeamSize() {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/team/size/${this.user.staff_id}`);
+        if (response.data.code === 200) {
+          this.teamSize = response.data.data.team_size;
+        } 
+      } 
+      catch (error) {
+        console.error('Error fetching team size', error);
+      }
+    },
     async loadTeamSchedule() {
       try {
-        const user = useAuthStore().getUser;
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/team/${user.staff_id}`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/team/${this.user.staff_id}`);
         
         if (response.data.code === 200) {
           const events = response.data.data.team_requests.map(request => ({
@@ -59,6 +71,7 @@ export default {
     },
   },
   async mounted() {
+    await this.getTeamSize();
     await this.loadTeamSchedule();
   }
 };

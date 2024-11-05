@@ -57,20 +57,23 @@ export default {
 
     async handleApply(data) {
       const user = useAuthStore().getUser;
+
       const payload = {
         staff_id: user.staff_id,
         reporting_manager: user.reporting_manager,
         dept: user.dept,
         chosen_date: data.date,
-        arrangement_type: data.option,
-        request_datetime: new Date().toISOString(),
-        status: 'Pending',
+        arrangement_type: data.arrangement_type,
+        request_datetime: new Date().toISOString().split('T')[0],
         remarks: data.comment,
+        recurring_id: data.recurring_id,
+        end_date: data.endDate,
       };
+      console.log(payload);
 
       try {
-        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/apply_wfh`, payload);
-        console.log(response.status === 200 ? 'successfully applied' : 'failed to apply');
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/apply_wfh_request`, payload);
+        console.log('successfully applied');
       } 
       catch (error) {
         console.log('failed to apply');
@@ -80,15 +83,20 @@ export default {
     async loadSchedule() {
       try {
         const user = useAuthStore().getUser;
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/staff_id/${user.staff_id}`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/staff_id/${user.staff_id}/All`);
         if (response.data.code === 200) {
           const events = response.data.data.requests.map(request => {
             let backgroundColor = '';
-            if (request.status === 'Pending') {
-              backgroundColor = 'orange';
-            } 
-            else if (request.status === 'Approved') {
-              backgroundColor = 'green';
+            switch (request.status) {
+              case 'Pending':
+                backgroundColor = 'orange';
+                break;
+              case 'Approved':
+                backgroundColor = 'green';
+                break;
+              case 'Rejected':
+                backgroundColor = 'red';
+                break;
             }
 
             return {
@@ -106,7 +114,13 @@ export default {
         }
       } 
       catch (error) {
-        console.error('Error fetching WFH schedule:', error);
+        if (error.response && error.response.status === 404) {
+          console.warn('No WFH requests found for this user, treating as no data:', error.response.data);
+          this.calendarOptions.events = [];
+        } 
+        else {
+          console.error('Error fetching WFH schedule:', error);
+        }
       }
     },
   },
