@@ -69,7 +69,7 @@ export default {
     };
   },
   methods: {
-    async approveRequest(recurring_id) {
+    async approveRequest() {
       try {
         await fetch(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/approve_wfh_request`, {
           method: "PUT",

@@ -1,6 +1,10 @@
 <template>
   <div class="legend">
     <div class="legend-item">
+      <span class="color-box rejected"></span>
+      <span>Rejected</span>
+    </div>
+    <div class="legend-item">
       <span class="color-box pending"></span>
       <span>Pending</span>
     </div>
@@ -28,6 +32,9 @@
   width: 20px;
   height: 20px;
   margin-right: 0.5rem;
+}
+.pending {
+  background-color: red;
 }
 .pending {
   background-color: orange;

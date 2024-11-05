@@ -1,9 +1,8 @@
 <template>
-    <ManagerMenuBar/>
+    <MenuBar/>
     <PersonalButtonContainer/>
-    <PersonalCalendar/>
-    <Legend/>
+    <PersonalListWithdrawalRequests/>
 </template>
-  
+
 <script>
 </script>
