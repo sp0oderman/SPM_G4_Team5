@@ -13,26 +13,34 @@ class WFH_Requests_Service:
         self.db = db
     
     # Get team strength by given date
-    def get_team_strength_by_date(self, reporting_manager_id, date):
+    def get_team_strength_by_date_range(self, reporting_manager_id, start_date, end_date):
         approved_requests_list = self.db.session.query(WFH_Requests).filter(
-                                    and_(
-                                        WFH_Requests.reporting_manager == reporting_manager_id,
-                                        WFH_Requests.status == "Approved",
-                                        WFH_Requests.chosen_date == date
-                                    )
-                                ).all()
+                and_(
+                    WFH_Requests.reporting_manager == reporting_manager_id,
+                    WFH_Requests.status == "Approved",
+                    WFH_Requests.chosen_date >= start_date,
+                    WFH_Requests.chosen_date <= end_date
+                )
+            ).all()
                                 
         # Initialise dictionary to store strength count
-        strength_dict = {"AM":0, "PM":0}
+        strength_dict = {}
 
         for req in approved_requests_list:
-            if  req.arrangement_type == "Full Day":
-                strength_dict["AM"] += 1
-                strength_dict["PM"] += 1
+            chosen_date_str = str(req.chosen_date)
+    
+            # Initialize nested dictionary for AM/PM if date not already in strength_dict
+            if chosen_date_str not in strength_dict:
+                strength_dict[chosen_date_str] = {"AM": 0, "PM": 0}
+
+            # Increment the count based on arrangement type
+            if req.arrangement_type == "Full Day":
+                strength_dict[chosen_date_str]["AM"] += 1
+                strength_dict[chosen_date_str]["PM"] += 1
             elif req.arrangement_type == "AM":
-                strength_dict["AM"] += 1
+                strength_dict[chosen_date_str]["AM"] += 1
             elif req.arrangement_type == "PM":
-                strength_dict["PM"] += 1
+                strength_dict[chosen_date_str]["PM"] += 1
 
         return strength_dict
 
@@ -122,7 +130,7 @@ class WFH_Requests_Service:
             team_size = self.db.session.query(Employees).filter_by(reporting_manager=manager_id).count()
 
             # Example business logic: enforce 50% team limit
-            wfh_count = self.db.session.query(WFH_Requests).filter_by(status='Approved').count()
+            wfh_count = self.db.session.query(WFH_Requests).filter_by(status='Approved', chosen_date=wfh_request.chosen_date, reporting_manager=wfh_request.reporting_manager).count()
             if wfh_count / team_size > 0.5:
                 return {"error": "More than 50 percent of the team is already working from home"}, 400
 
@@ -162,6 +170,42 @@ class WFH_Requests_Service:
 
             # Send the email notification using mailersend
             approvalOrRejectionWFHRequestEmailNotif(reporting_manager, employee, wfh_request)
+
+            return {"message": "WFH request withdrawn successfully!"}, 200
+
+        except Exception as e:
+            return {"error": str(e)}, 500
+        
+    # Service for Manager to withdraw approved WFH requests or staff to withdraw pending request
+    def withdraw_wfh_request(self, request_id, withdrawal_reason):
+        try:
+
+            # Retrieve the WFH request by ID
+            wfh_request = self.db.session.query(WFH_Requests).filter(
+                WFH_Requests.request_id == request_id,
+                WFH_Requests.status.in_(['Approved', 'Pending'])
+            ).first()
+
+            # Check if manager or staff
+            flag = False
+            if wfh_request.status == "Approved":
+                flag = True
+
+            if not wfh_request:
+                return {"error": "No such approved/pending WFH request found"}, 404
+
+            # Withdraw the WFH request
+            wfh_request.status = 'Withdrawn'
+            wfh_request.reason_for_status = withdrawal_reason
+            self.db.session.commit()
+
+            # Retrieve information needed to populate email content
+            reporting_manager = self.db.session.query(Employees).filter_by(staff_id=wfh_request.reporting_manager).first()
+            employee = self.db.session.query(Employees).filter_by(staff_id=wfh_request.staff_id).first()
+
+            # Send the email notification if manager withdraw approved req
+            if flag:
+                withdrawWFHRequestEmailNotif(reporting_manager, employee, wfh_request)
 
             return {"message": "WFH request withdrawn successfully!"}, 200
 

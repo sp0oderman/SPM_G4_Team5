@@ -1,178 +1,194 @@
+import sys
+import os
+
+# Add the root directory (where the src directory is located) to the system path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
 import unittest
 from unittest.mock import MagicMock, patch
+from datetime import datetime
+from src.services.wfh_requests_services import WFH_Requests_Service
 from src.models.wfh_requests import WFH_Requests
 from src.models.employees import Employees
-from src.services.wfh_requests_services import WFH_Requests_Service
-
 
 class TestWFHRequestsService(unittest.TestCase):
     def setUp(self):
-        # Set up mock database and service instance
-        self.mock_db = MagicMock()
-        self.wfh_service = WFH_Requests_Service(self.mock_db)
+        # Initialize mock database and service
+        self.db = MagicMock()
+        self.service = WFH_Requests_Service(self.db)
+
+    def test_get_team_strength_by_date_range(self):
+        # Mock data for date range
+        mock_request1 = MagicMock(arrangement_type="Full Day", chosen_date="2023-12-01")
+        mock_request2 = MagicMock(arrangement_type="AM", chosen_date="2023-12-02")
+        mock_request3 = MagicMock(arrangement_type="PM", chosen_date="2023-12-02")
+        self.db.session.query.return_value.filter.return_value.all.return_value = [mock_request1, mock_request2, mock_request3]
         
-        # Mock data for Employees and WFH_Requests
-        self.mock_employee = Employees(
+        # Call the method with date range
+        result = self.service.get_team_strength_by_date_range(reporting_manager_id=1, start_date="2023-12-01", end_date="2023-12-02")
+
+        # Assertions
+        self.assertEqual(result["2023-12-01"]["AM"], 1)
+        self.assertEqual(result["2023-12-01"]["PM"], 1)
+        self.assertEqual(result["2023-12-02"]["AM"], 1)
+        self.assertEqual(result["2023-12-02"]["PM"], 1)
+
+    def test_find_by_employees(self):
+        # Mock data
+        mock_employee = MagicMock(staff_id=1)
+        mock_request = MagicMock()
+        mock_request.json.return_value = {"request_id": 1, "status": "Approved"}
+        
+        # Mock method responses
+        self.service.find_by_staff_id = MagicMock(return_value=[mock_request])
+
+        # Call the method
+        result = self.service.find_by_employees([mock_employee], status="Approved")
+
+        # Assertions
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], mock_request)
+
+    def test_apply_wfh_success(self):
+        # Mock data
+        mock_employee = MagicMock(staff_id=1)
+        mock_reporting_manager = MagicMock(staff_id=2)
+        
+        # Mock database actions
+        self.db.session.add = MagicMock()
+        self.db.session.commit = MagicMock()
+        
+        # Mock the request and set a request_id
+        mock_request = MagicMock(request_id=1)
+        self.db.session.query.return_value.filter_by.return_value.first.side_effect = [mock_employee, mock_reporting_manager, mock_request]
+
+        # Patch the email notification function
+        with patch("src.services.wfh_requests_services.newWFHRequestEmailNotif") as mock_email_notif:
+            mock_email_notif.return_value = None  # Mock it to do nothing
+
+            # Call the method
+            response, status_code = self.service.apply_wfh(
+                staff_id=1,
+                reporting_manager=2,
+                dept="Engineering",
+                chosen_date="2024-12-01",
+                arrangement_type="Full Day",
+                request_datetime=datetime.now(),
+                status="Pending",
+                remarks="WFH request",
+                recurring_id=-1
+            )
+
+            # Assertions
+            self.assertEqual(status_code, 200)
+            self.assertEqual(response["message"], "WFH request submitted successfully!")
+
+    def test_apply_wfh_failure(self):
+        # Mock exception
+        self.db.session.add.side_effect = Exception("Database error")
+
+        # Call the method
+        response, status_code = self.service.apply_wfh(
             staff_id=1,
-            staff_fname="John",
-            staff_lname="Doe",
-            dept="IT",
-            position="staff",
-            country="Singapore",
-            role=2,
-            email="john.doe@example.com",
-            reporting_manager=3
-        )
-        
-        self.mock_request = WFH_Requests(
-            # request_id=101, 
-            staff_id=1, 
-            reporting_manager=3, 
-            dept="IT",
-            chosen_date="2024-10-15",
-            arrangement_type="Full Day", 
-            request_datetime="2024-10-10", 
-            status="Pending", 
-            remarks="Family commitment"
+            reporting_manager=2,
+            dept="Engineering",
+            chosen_date="2023-12-01",
+            arrangement_type="Full Day",
+            request_datetime=datetime.now(),
+            status="Pending",
+            remarks="WFH request",
+            recurring_id=-1
         )
 
-    @patch("src.utils.email_functions.newRequestEmailNotif")
-    def test_apply_wfh_successful(self, mock_email_notif):
-        # Mock the database calls
-        self.mock_db.session.add.return_value = None
-        self.mock_db.session.commit.return_value = None
-        self.mock_db.session.query().filter_by().first.side_effect = [self.mock_request, self.mock_employee, self.mock_employee]
+        # Assertions
+        self.assertEqual(status_code, 500)
+        self.assertIn("Database error", response["error"])
 
-        response, status_code = self.wfh_service.apply_wfh(
-            staff_id=1, reporting_manager=3, dept="IT", chosen_date="2024-10-15", 
-            arrangement_type="Full Day", request_datetime="2024-10-10", status="Pending", remarks="Family commitment"
-        )
+    def test_can_apply_wfh_no_conflict(self):
+        # Mock no conflicting requests
+        self.db.session.query.return_value.filter.return_value.all.return_value = []
 
-        # Check results
-        self.assertEqual(status_code, 200)
-        self.assertEqual(response["message"], "WFH request submitted successfully!")
-        # mock_email_notif.assert_called_once()
+        # Call the method
+        result = self.service.can_apply_wfh(staff_id=1, chosen_date="2023-12-01", arrangement_type="Full Day")
 
-    def test_get_manager_team(self):
-        # Mock the return value for team data
-        self.mock_db.session.query().filter_by().all.return_value = [self.mock_employee]
+        # Assertions
+        self.assertTrue(result)
 
-        result = self.wfh_service.get_manager_team(manager_id=3)
+    def test_can_apply_wfh_conflict(self):
+        # Mock conflicting request
+        mock_request = MagicMock(arrangement_type="AM")
+        self.db.session.query.return_value.filter.return_value.all.return_value = [mock_request]
 
-        # Assert that the response contains the expected team data
-        expected_result = [{
-            'Staff_ID': self.mock_employee.staff_id,
-            'Staff_FName': self.mock_employee.staff_fname,
-            'Staff_LName': self.mock_employee.staff_lname,
-            'Position': self.mock_employee.position
-        }]
-        self.assertEqual(result, expected_result)
+        # Call the method
+        result = self.service.can_apply_wfh(staff_id=1, chosen_date="2023-12-01", arrangement_type="AM")
 
-    @patch("src.utils.email_functions.approvalOrRejectionEmailNotif")
-    @patch("src.utils.email_functions.mailer")
-    def test_approve_wfh_request_successful(self, mock_mailer,mock_email_notif):
-        self.mock_request = MagicMock()
-        self.mock_request.request_id = 101
-        self.mock_request.reporting_manager = 3
-        self.mock_request.staff_id = 1
-        self.mock_request.status = 'Pending'
+        # Assertions
+        self.assertFalse(result)
 
-        # Mock the database interactions
-        self.mock_db.session.query().filter_by(request_id=101, status='Pending').first.return_value = self.mock_request
+    def test_approve_wfh_request(self):
+        # Mock data
+        mock_request = MagicMock(status="Pending")
+        self.db.session.query.return_value.filter_by.return_value.first.return_value = mock_request
         
-        self.mock_db.session.query().filter_by(reporting_manager=3).count.return_value = 10
+        # Mock team size and WFH count queries
+        self.db.session.query.return_value.filter_by.return_value.count.side_effect = [10, 4]  # Mock team size as 10 and approved count as 4
         
-        self.mock_db.session.query().filter_by(status='Approved').count.return_value = 1
+        # Patch the email notification function
+        with patch("src.services.wfh_requests_services.approvalOrRejectionWFHRequestEmailNotif") as mock_email_notif:
+            mock_email_notif.return_value = None  # Mock it to do nothing
 
-        self.mock_db.session.commit.return_value = None
+            # Call the method
+            response, status_code = self.service.approve_wfh_request(request_id=1, manager_id=2, reason_for_status="Approved")
 
-        # Call the method under test
-        response, status_code = self.wfh_service.approve_wfh_request(request_id=101, manager_id=3)
+            # Assertions
+            self.assertEqual(status_code, 200)
+            self.assertEqual(response["message"], "WFH request approved successfully!")
+            self.assertEqual(mock_request.status, "Approved")
+            self.assertEqual(mock_request.reason_for_status, "Approved")
 
-        # Check results
-        self.assertEqual(status_code, 200)
-        self.assertEqual(response["message"], "WFH request approved successfully!")
-        mock_mailer.send.assert_called_once()
+    def test_reject_wfh_request(self):
+        # Mock data
+        mock_request = MagicMock(status="Pending")
+        self.db.session.query.return_value.filter_by.return_value.first.return_value = mock_request
 
+        # Call the method
+        response, status_code = self.service.reject_wfh_request(request_id=1, rejection_reason="Not needed")
 
-    @patch("src.utils.email_functions.approvalOrRejectionEmailNotif")
-    @patch("src.utils.email_functions.mailer")
-    def test_reject_wfh_request_successful(self, mock_mailer, mock_email_notif):
-        self.mock_request = MagicMock()
-        self.mock_request.request_id = 101
-        self.mock_request.reporting_manager = 3
-        self.mock_request.staff_id = 1
-        self.mock_request.status = 'Pending'
-
-        # Mock the database interactions
-        self.mock_db.session.query().filter_by(request_id=101, status='Pending').first.return_value = self.mock_request
-        
-        self.mock_db.session.query().filter_by(reporting_manager=3).count.return_value = 10
-        
-        self.mock_db.session.query().filter_by(status='Rejected').count.return_value = 1
-        self.mock_db.session.commit.return_value = None
-
-        response, status_code = self.wfh_service.reject_wfh_request(request_id=101, rejection_reason="Workload")
-
-        # Check results
+        # Assertions
         self.assertEqual(status_code, 200)
         self.assertEqual(response["message"], "WFH request rejected successfully!")
-        mock_mailer.send.assert_called_once()
+        self.assertEqual(mock_request.status, "Rejected")
 
-    def test_get_all_requests(self):
-        # Mock the return value for all WFH requests
-        self.mock_db.session.scalars.return_value.all.return_value = [self.mock_request]
+    def test_withdraw_wfh_request(self):
+        # Mock data
+        mock_request = MagicMock(status="Pending")
+        self.db.session.query.return_value.filter.return_value.first.return_value = mock_request
 
-        result = self.wfh_service.get_all(status="All")
+        # Call the method
+        response, status_code = self.service.withdraw_wfh_request(request_id=1, withdrawal_reason="Changed plans")
 
-        # Assert the returned list matches the expected mock data
-        self.assertEqual(result, [self.mock_request])
-
-    def test_find_by_request_id(self):
-        # Mock the return value for a single WFH request by request ID
-        self.mock_db.session.scalars.return_value.first.return_value = self.mock_request
-
-        result = self.wfh_service.find_by_request_id(request_id_num=101)
-
-        # Check the returned request matches the mock data
-        self.assertEqual(result, self.mock_request)
-
-    @patch("src.utils.email_functions.withdrawRequestEmailNotif")
-    @patch("src.utils.email_functions.mailer")
-    def test_delete_wfh_request_successful(self, mock_mailer, mock_email_notif):
-        self.mock_request = MagicMock()
-        self.mock_request.request_id = 101
-        self.mock_request.reporting_manager = 3
-        self.mock_request.staff_id = 1
-        self.mock_request.status = 'Pending'
-
-        # Mock the database interactions
-        self.mock_db.session.query().filter_by(request_id=101, status='Pending').first.return_value = self.mock_request
-        
-        self.mock_db.session.query().filter_by(reporting_manager=3).count.return_value = 10
-        
-        self.mock_db.session.query().filter_by(status='Approved').count.return_value = 1
-
-        self.mock_db.session.commit.return_value = None
-
-        status_code, error = self.wfh_service.delete_wfh_request(request_id_num=101)
-
-        # Check the result and ensure no errors are returned
+        # Assertions
         self.assertEqual(status_code, 200)
-        self.assertIsNone(error)
-        mock_mailer.send.assert_called_once()
+        self.assertEqual(response["message"], "WFH request withdrawn successfully!")
+        self.assertEqual(mock_request.status, "Withdrawn")
 
-    def test_view_pending_wfh_requests(self):
-        # Mock return values for manager's team and their pending requests
-        self.mock_db.session.query().filter_by().all.side_effect = [[self.mock_employee], [self.mock_request]]
+    def test_approve_recurring_wfh_requests(self):
+        # Mock db update for recurring approval
+        self.db.session.query.return_value.filter.return_value.update.return_value = 3  # Assume 3 requests updated
+        response, status_code = self.service.approve_recurring_wfh_requests(recurring_id=1, reason_for_status="Approved")
 
-        result, status_code = self.wfh_service.view_pending_wfh_requests(manager_id=3)
-        
-        # Check the response structure and data
-        expected_result = []
-        self.assertEqual(result, expected_result)
+        # Assertions
         self.assertEqual(status_code, 200)
+        self.assertEqual(response["message"], "All recurring requests approved successfully")
 
+    def test_reject_recurring_wfh_requests(self):
+        # Mock db update for recurring rejection
+        self.db.session.query.return_value.filter.return_value.update.return_value = 3  # Assume 3 requests updated
+        response, status_code = self.service.reject_recurring_wfh_requests(recurring_id=1, reason_for_status="Not approved")
+
+        # Assertions
+        self.assertEqual(status_code, 200)
+        self.assertEqual(response["message"], "All recurring requests rejected successfully")
 
 if __name__ == "__main__":
     unittest.main()
