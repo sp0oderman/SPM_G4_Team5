@@ -1,5 +1,6 @@
 <template>
     <HRMenuBar/>
+    <PersonalButtonContainer/>
     <PersonalCalendar/>
     <Legend/>
 </template>

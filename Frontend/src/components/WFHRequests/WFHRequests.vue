@@ -19,7 +19,7 @@
       
       <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="secondary" variant="text" @click="openDialog(request.request_id, request.recurring_id)" :disabled="request.status !== 'Pending'">
+            <v-btn color="secondary" variant="text" @click="openDialog(request)" :disabled="request.status !== 'Pending'">
                 Approve / Reject / Withdraw
             </v-btn>
         </v-card-actions>
@@ -28,7 +28,9 @@
     <!-- Request Dialog -->
     <v-dialog v-model="dialog" max-width="600px">
         <v-card>
-            <v-card-title class="headline">Selected Withdrawal Request: {{ selectedRequestId }}</v-card-title>
+            <v-card-title class="headline">Selected WFH Request: {{ request.request_id }}
+              <p>WFH Date: {{ formatDate(request.chosen_date) }}</p>
+            </v-card-title>
             <v-card-text>
             <v-textarea v-model="reason" label="Reason for Approval / Rejection / Withdrawal (Mandatory)" outlined></v-textarea>
             </v-card-text>
@@ -64,25 +66,31 @@ export default {
     return {
       dialog: false,
       reason: '',
-      recurring_id: null,
-      selectedRequestId: null,
+      request: null,
     };
   },
   methods: {
     async approveRequest() {
       try {
-        await fetch(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/approve_wfh_request`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/approve_wfh_request`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({ 
-            request_id: this.selectedRequestId, 
+            request_id: this.request.request_id, 
             reporting_manager: useAuthStore().getUser.staff_id,
             reason_for_status: this.reason,
-            recurring_id: this.recurring_id,
+            recurring_id: this.request.recurring_id,
           })
         });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error response from server:", errorData);
+          console.log(errorData.error)
+        }
+
         this.closeDialog();
         this.$emit("update-requests");
       } 
@@ -98,12 +106,19 @@ export default {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({ 
-            request_id: this.selectedRequestId, 
+            request_id: this.request.request_id, 
             reporting_manager: useAuthStore().getUser.staff_id,
             reason_for_status: this.reason,
-            recurring_id: this.recurring_id,
+            recurring_id: this.request.recurring_id,
           })
         });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error response from server:", errorData);
+          console.log(errorData.error)
+        }
+        
         this.closeDialog();
         this.$emit("update-requests");
       } 
@@ -111,7 +126,7 @@ export default {
         console.error("Error rejecting request:", error);
       }
     },
-    async withdrawRequest(recurring_id) {
+    async withdrawRequest() {
       try {
         await fetch(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/withdraw_wfh_request`, {
           method: "PUT",
@@ -119,10 +134,10 @@ export default {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({ 
-            request_id: this.selectedRequestId, 
+            request_id: this.request.request_id, 
             reporting_manager: useAuthStore().getUser.staff_id,
             reason_for_status: this.reason,
-            recurring_id: this.recurring_id,
+            recurring_id: this.request.recurring_id,
           })
         });
         this.closeDialog();
@@ -132,16 +147,17 @@ export default {
         console.error("Error rejecting request:", error);
       }
     },
-    openDialog(requestId, recurring_id) {
-      this.selectedRequestId = requestId;
-      this.recurring_id = recurring_id;
+    openDialog(request) {
+      this.resetDialog();
+      this.request = request;
       this.dialog = true;
     },
     closeDialog() {
       this.dialog = false;
-      this.reason = '';
-      this.recurring_id = null;
-      this.selectedRequestId = null;
+    },
+    resetDialog(){
+      this.request = null;
+      this.reason = "";
     },
     formatDate(dateString) {
       const date = new Date(dateString);

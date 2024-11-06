@@ -5,6 +5,7 @@
       item-title="name"
       item-value="id"
       v-model="selectedManager"
+      v-show="visible"
     ></v-select>
   <FullCalendar :options="calendarOptions" />
 </template>
@@ -29,6 +30,7 @@ export default {
     endDate.setDate(today.getDate() + 1);
 
     return {
+      visible: false,
       reportingManagers: [],
       teamSize: 0,
       selectedManager: null,
@@ -47,19 +49,28 @@ export default {
   methods: {
     async loadReportingManagers() {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/reporting_managers_list`);
+        let response = "";
+        if (useAuthStore().getAccessControl === "ceo" || useAuthStore().getAccessControl === "hr"){
+          response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/reporting_managers_list`);
+        }
+        else{
+          response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/reporting_managers_under_me_list/`);
+        }
         if (response.data.code === 200) {
+          this.visible = true;
           this.reportingManagers = response.data.data.reporting_managers.map(manager => ({
             id: manager.staff_id,
             name: manager.staff_fname + " " + manager.staff_lname,
           }));
-        } 
-        else {
-          console.warn('No reporting managers found.');
         }
       } 
       catch (error) {
-        console.error('Error fetching reporting managers:', error);
+        if (error.response && error.response.status === 404) {
+          console.error('No reporting managers found.');
+        } 
+        else {
+          console.error('Error fetching reporting managers:', error);
+        }
       }
     },
     async getTeamSize(){
@@ -67,13 +78,15 @@ export default {
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/team/size/${this.selectedManager}`);
         if (response.data.code === 200) {
           this.teamSize = response.data.data.team_size;
-        } 
-        else {
-          console.warn('No reporting managers found.');
         }
       } 
       catch (error) {
-        console.error('Error fetching reporting managers:', error);
+        if (error.response && error.response.status === 404) {
+          console.error('No team found for selected reporting manager.');
+        } 
+        else {
+          console.error('Error fetching selected reporting manager team:', error);
+        }
       }
     },
     async loadSpecificTeamSchedule() {
@@ -84,7 +97,6 @@ export default {
       }
 
       try {
-        const user = useAuthStore().getUser;
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/team/strength/${this.selectedManager}/${this.calendarOptions.validRange.start}/${this.calendarOptions.validRange.end}`);
         const dates = response.data.data.dates;
         const events = Object.keys(dates).map(date => {
@@ -96,25 +108,28 @@ export default {
         }).flat();
 
         this.calendarOptions.events = events;
-
-        if (events.length === 0) {
-            console.error('No WFH requests.');
-        }
         
       } 
       catch (error) {
-        console.error('Error fetching WFH schedule:', error);
+        if (error.response && error.response.status === 404) {
+          console.error('No WFH requests.');
+        } 
+        else {
+          console.error('Error fetching WFH schedule:', error);
+        }
       }
     },
   },
   watch: {
     selectedManager(newVal) {
-      console.log('Selected Manager:', newVal);
       this.loadSpecificTeamSchedule();
     },
   },
   async mounted() {
     await this.loadReportingManagers();
+    if (this.reportingManagers.length === 0){
+      this.selectedManager = useAuthStore().getUser.staff_id;
+    }
   }
 };
 </script>

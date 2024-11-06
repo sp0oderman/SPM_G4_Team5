@@ -18,11 +18,12 @@
         </v-expansion-panel-text>
         
         <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="secondary" variant="text" @click="openDialog(request.request_id, request.recurring_id)" :disabled="request.status !== 'Pending'">
-                  Withdraw
-              </v-btn>
-          </v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="secondary" variant="text" @click="openDialog(request.request_id, request.recurring_id)" 
+          :disabled="request.status === 'Rejected' || request.status === 'Withdrawn'">
+              Withdraw
+          </v-btn>
+        </v-card-actions>
       </v-expansion-panel>
   
       <!-- Request Dialog -->

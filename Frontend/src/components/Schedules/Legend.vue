@@ -22,7 +22,7 @@
 .legend {
   display: flex;
   gap: 1rem;
-  margin: 1rem 0;
+  margin: 10px;
 }
 .legend-item {
   display: flex;
@@ -33,7 +33,7 @@
   height: 20px;
   margin-right: 0.5rem;
 }
-.pending {
+.rejected {
   background-color: red;
 }
 .pending {

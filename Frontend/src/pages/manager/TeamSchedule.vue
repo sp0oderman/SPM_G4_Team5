@@ -1,7 +1,7 @@
 <template>
     <ManagerMenuBar/>
     <ButtonContainer/>
-    <ManagerCalendar/>
+    <ManagementCalendar/>
 </template>
   
 <script>

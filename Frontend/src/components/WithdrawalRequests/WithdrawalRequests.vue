@@ -29,7 +29,7 @@
         <v-card>
             <v-card-title class="headline">Selected Withdrawal Request: {{ this.request.request_id }}</v-card-title>
             <v-card-text>
-            <v-textarea v-model="reason" label="Reason for approval / rejection (Mandatory)" outlined></v-textarea>
+            <v-textarea v-model="reason" label="Reason for Approval / Rejection (Mandatory)" outlined></v-textarea>
             </v-card-text>
             <v-card-actions>
             <v-spacer></v-spacer>

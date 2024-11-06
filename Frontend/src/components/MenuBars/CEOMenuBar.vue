@@ -1,6 +1,6 @@
 <template>
   <v-app-bar app color="primary" dark>
-    <v-toolbar-title>SPM WFH Project</v-toolbar-title>
+    <v-toolbar-title>Allinone WFH System</v-toolbar-title>
     <v-spacer></v-spacer>
     <v-btn text @click="teamSchedule">My Team's Schedule</v-btn>
     <v-btn text @click="overallSchedule">All Teams</v-btn>

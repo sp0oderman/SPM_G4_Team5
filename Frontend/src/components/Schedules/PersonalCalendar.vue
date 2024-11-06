@@ -85,7 +85,8 @@ export default {
         const user = useAuthStore().getUser;
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/staff_id/${user.staff_id}/All`);
         if (response.data.code === 200) {
-          const events = response.data.data.requests.map(request => {
+          const events = response.data.data.requests.filter(request => request.status !== "Withdrawn")
+          .map(request => {
             let backgroundColor = '';
             switch (request.status) {
               case 'Pending':

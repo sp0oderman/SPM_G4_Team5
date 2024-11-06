@@ -28,7 +28,7 @@
           }
           const data = await response.json();
           console.log(data.data)
-          this.pendingRequests = data.data.team_requests;
+          this.pendingRequests = data.data.requests;
         } 
         catch (error) {
           console.error("Error fetching pending requests:", error);
