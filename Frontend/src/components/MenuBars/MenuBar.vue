@@ -1,9 +1,9 @@
 <template>
   <v-app-bar app color="primary" dark>
-    <v-toolbar-title>SPM WFH Project</v-toolbar-title>
+    <v-toolbar-title>Allinone WFH System</v-toolbar-title>
     <v-spacer></v-spacer>
-    <v-btn text @click="personal">Personal</v-btn>
-    <v-btn text @click="team">Team</v-btn>
+    <v-btn text @click="personal">My Schedule</v-btn>
+    <v-btn text @click="team">My Team's Schedule</v-btn>
     <v-btn text @click="logout">Logout</v-btn>
   </v-app-bar>
 </template>

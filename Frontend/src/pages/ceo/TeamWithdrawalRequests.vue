@@ -1,7 +1,8 @@
 <template>
     <CEOMenuBar/>
-    <ManagementCalendar/>
+    <ButtonContainer/>
+    <ListWithdrawalRequests/>
 </template>
-  
+
 <script>
 </script>

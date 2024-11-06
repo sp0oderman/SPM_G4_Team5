@@ -1,9 +1,8 @@
 <template>
     <ManagerMenuBar/>
     <ButtonContainer/>
-    <ManagementCalendar/>
+    <ListWFHRequests/>
 </template>
   
 <script>
-
 </script>

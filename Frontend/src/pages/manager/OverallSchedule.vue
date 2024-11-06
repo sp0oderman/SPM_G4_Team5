@@ -1,5 +1,5 @@
 <template>
-    <CEOMenuBar/>
+    <ManagerMenuBar/>
     <ManagementCalendar/>
 </template>
   

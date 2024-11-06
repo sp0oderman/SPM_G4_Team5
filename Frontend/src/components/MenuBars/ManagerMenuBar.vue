@@ -1,10 +1,10 @@
 <template>
   <v-app-bar app color="primary" dark>
-    <v-toolbar-title>SPM WFH Project</v-toolbar-title>
+    <v-toolbar-title>Allinone WFH System</v-toolbar-title>
     <v-spacer></v-spacer>
-    <v-btn text @click="team">Team</v-btn>
-    <v-btn text @click="wfhRequests">WFH Requests</v-btn>
-    <v-btn text @click="personal">Personal</v-btn>
+    <v-btn text @click="personal">My Schedule</v-btn>
+    <v-btn text @click="team">My Team's Schedule</v-btn>
+    <v-btn text @click="overall">Teams Under Me</v-btn>
     <v-btn text @click="logout">Logout</v-btn>
   </v-app-bar>
 </template>
@@ -22,6 +22,9 @@ export default {
     },
     personal(){
       this.$router.push({ name: '/manager/PersonalSchedule' });
+    },
+    overall(){
+      this.$router.push({ name: '/manager/OverallSchedule' });
     },
     logout() {
       const authStore = useAuthStore();
