@@ -11,6 +11,8 @@ from src.services.wfh_requests_services import WFH_Requests_Service
 from src.models.wfh_requests import WFH_Requests
 from src.models.employees import Employees
 
+from datetime import datetime, timedelta
+
 class TestWFHRequestsService(unittest.TestCase):
     def setUp(self):
         # Initialize mock database and service
@@ -189,6 +191,23 @@ class TestWFHRequestsService(unittest.TestCase):
         # Assertions
         self.assertEqual(status_code, 200)
         self.assertEqual(response["message"], "All recurring requests rejected successfully")
+
+    @patch('src.services.wfh_requests_services.datetime')
+    def test_reject_old_pending_wfh_requests(self, mock_datetime):
+        # Set a fixed date for datetime to ensure consistency
+        current_date = datetime(2024, 12, 1)
+        mock_datetime.now.return_value = current_date
+
+        # Set up a mock WFH request that is older than 2 months and pending
+        old_request = MagicMock(status="Pending", request_datetime=current_date - timedelta(days=61))
+        self.db.session.query.return_value.filter.return_value.all.return_value = [old_request]
+
+        # Call the method
+        self.service.reject_old_pending_wfh_requests()
+
+        # Assertions
+        self.assertEqual(old_request.status, "Rejected")
+        self.db.session.commit.assert_called_once()
 
 if __name__ == "__main__":
     unittest.main()

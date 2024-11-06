@@ -6,7 +6,7 @@ from src.models.withdrawal_requests import Withdrawal_Requests
 from src.utils.email_functions import *
 
 from sqlalchemy import and_
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class WFH_Requests_Service:
     def __init__(self, db):
@@ -255,6 +255,20 @@ class WFH_Requests_Service:
         except Exception as e:
             self.db.session.rollback()
             return {"error": str(e)}, 500
+    
+    # Auto reject WFH_Requests that are still "Pending" beyond the 2mths cutoff
+    def reject_old_pending_wfh_requests(self):
+        cutoff_date = datetime.now() - timedelta(days=60)
+        old_pending_requests = self.db.session.query(WFH_Requests).filter(
+            WFH_Requests.status == 'Pending',
+            WFH_Requests.request_datetime < cutoff_date
+        ).all()
+        
+        for request in old_pending_requests:
+            request.status = 'Rejected'
+
+        # Commit changes to the database
+        self.db.session.commit()
 
 #####################################################################################################################
 #                                                                                                                   #
