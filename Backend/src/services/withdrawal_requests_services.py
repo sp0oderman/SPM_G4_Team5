@@ -6,6 +6,7 @@ from src.models.withdrawal_requests import Withdrawal_Requests
 from src.utils.email_functions import *
 
 from sqlalchemy import and_
+from datetime import datetime, timedelta
 
 class Withdrawal_Requests_Service:
     def __init__(self, db):
@@ -135,4 +136,17 @@ class Withdrawal_Requests_Service:
         except Exception as e:
             return {"error": str(e)}, 500
     
+    # Auto reject Withdrawal_Requests that are still "Pending" beyond the 2-month cutoff
+    def reject_old_pending_withdrawal_requests(self):
+        cutoff_date = datetime.now() - timedelta(days=60)
+        old_pending_requests = self.db.session.query(Withdrawal_Requests).filter(
+            Withdrawal_Requests.status == 'Pending',
+            Withdrawal_Requests.request_datetime < cutoff_date
+        ).all()
+        
+        for request in old_pending_requests:
+            request.status = 'Rejected'
+
+        # Commit changes to the database
+        self.db.session.commit()
         
