@@ -4,12 +4,13 @@ import axios from 'axios';
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
+    accessControl: null,
     error: null,
   }),
   actions: {
     async authenticate(email) {
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/employees/auth/${email}`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/staff/email/${email}`);
         if (response.data.code === 200) {
           this.user = response.data.data;
           this.error = null;
@@ -24,13 +25,21 @@ export const useAuthStore = defineStore('auth', {
         this.error = 'Invalid email';
       }
     },
-    logout() {
+    setAccessControl(role) {
+      this.accessControl = role;
+    },
+    reset(){
       this.user = null;
+      this.accessControl = null;
       this.error = null;
+    },
+    logout() {
+      this.reset()
     },
   },
   getters: {
-    getUser: state => state.user
+    getUser: state => state.user,
+    getAccessControl: state => state.accessControl
   },
   persist: true,
 });
