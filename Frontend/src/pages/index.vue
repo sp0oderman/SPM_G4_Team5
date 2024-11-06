@@ -72,14 +72,21 @@ export default {
         const userRole = authStore.getUser.role;
         const userDept = authStore.getUser.dept;
         
-        if (userRole === 1) {
-          this.$router.push({ name: userDept === "CEO" ? '/ceo/OverallSchedule' : '/hr/OverallSchedule' });
-        } 
+        if (userDept === "CEO"){
+          authStore.setAccessControl("ceo");
+          this.$router.push({ name: '/ceo/OverallSchedule'});
+        }
+        else if (userDept === "HR"){
+          authStore.setAccessControl("hr");
+          this.$router.push({ name: '/hr/PersonalSchedule' })
+        }
         else if (userRole === 2) {
+          authStore.setAccessControl("staff");
           this.$router.push({ name: '/staff/PersonalSchedule' });
         } 
-        else if (userRole === 3) {
-          this.$router.push({ name: '/manager/TeamSchedule' });
+        else if (userRole === 1 || userRole === 3) {
+          authStore.setAccessControl("manager");
+          this.$router.push({ name: '/manager/PersonalSchedule' });
         }
       }
 

@@ -1,9 +1,8 @@
 <template>
     <MenuBar/>
     <PersonalButtonContainer/>
-    <PersonalCalendar/>
-    <Legend/>
+    <PersonalListWFHRequests/>
 </template>
-  
+
 <script>
 </script>

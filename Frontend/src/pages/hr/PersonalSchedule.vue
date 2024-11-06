@@ -1,7 +1,8 @@
 <template>
     <HRMenuBar/>
-    <Legend/>
+    <PersonalButtonContainer/>
     <PersonalCalendar/>
+    <Legend/>
 </template>
   
 <script>

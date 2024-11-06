@@ -4,6 +4,7 @@ import axios from 'axios';
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
+    accessControl: null,
     error: null,
   }),
   actions: {
@@ -24,17 +25,21 @@ export const useAuthStore = defineStore('auth', {
         this.error = 'Invalid email';
       }
     },
-    logout() {
-      this.user = null;
-      this.error = null;
+    setAccessControl(role) {
+      this.accessControl = role;
     },
     reset(){
       this.user = null;
+      this.accessControl = null;
       this.error = null;
-    }
+    },
+    logout() {
+      this.reset()
+    },
   },
   getters: {
-    getUser: state => state.user
+    getUser: state => state.user,
+    getAccessControl: state => state.accessControl
   },
   persist: true,
 });
