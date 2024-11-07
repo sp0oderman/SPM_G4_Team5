@@ -9,7 +9,7 @@
       v-if="alertMessage.status"
       :status="alertMessage.status"
       :message="alertMessage.message"
-      :key="alertMessage.message"
+      :key="alertMessage.key"
     />
 </template>
 
@@ -20,10 +20,12 @@ export default {
   data() {
     return {
       withdawalRequests: [],
-        alertMessage: {
-          status: '',
-          message: ''
-        }
+      count: 0,
+      alertMessage: {
+        key: 0,
+        status: '',
+        message: ''
+      }
     };
   },
   mounted() {
@@ -42,9 +44,11 @@ export default {
       } 
       catch (error) {
         console.error("Error fetching withdrawal requests:", error);
+        this.count = this.count + 1;
         this.alertMessage = {
+            key: this.count,
             status: 'fail',
-            message: error.response.data.message
+            message: "No withdrawal requests"
         };
       }
     }
