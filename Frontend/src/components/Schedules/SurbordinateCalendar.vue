@@ -3,7 +3,7 @@
   
     <AlertMessage 
         v-if="alertMessage.status" 
-        :key="alertMessage.message"
+        :key="alertMessage.key"
         :status="alertMessage.status" 
         :message="alertMessage.message"
       />
@@ -46,7 +46,9 @@
             end: endDate.toISOString().split('T')[0]
           }
         },
+        count: 0,
         alertMessage: {
+          key: 0,
           status: '',
           message: ''
         }
@@ -60,14 +62,18 @@
             this.teamSize = response.data.data.team_size;
           } 
           else {
+            this.count = this.count + 1;
             this.alertMessage = {
+              key: this.count,
               status: 'fail',
               message: 'No reporting managers found.'
             };
           }
         } 
         catch (error) {
+          this.count = this.count + 1;
           this.alertMessage = {
+            key: this.count,
             status: 'fail',
             message: error.response.data.message
           };
@@ -95,7 +101,9 @@
           this.calendarOptions.events = events;
   
           if (events.length === 0) {
+            this.count = this.count + 1;
             this.alertMessage = {
+              key: this.count,
               status: 'fail',
               message: error.response.data.message
             };
@@ -105,7 +113,9 @@
         } 
         catch (error) {
           console.error('Error fetching WFH schedule:', error);
+          this.count = this.count + 1;
           this.alertMessage = {
+            key: this.count,
             status: 'fail',
             message: error.response.data.message
           };

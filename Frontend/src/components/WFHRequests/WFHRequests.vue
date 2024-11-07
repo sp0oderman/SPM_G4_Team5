@@ -79,7 +79,7 @@
       v-if="alertMessage.status"
       :status="alertMessage.status"
       :message="alertMessage.message"
-      :key="alertMessage.message"
+      :key="alertMessage.key"
     />
 </template>
 
@@ -99,7 +99,9 @@ export default {
       dialog: false,
       reason: '',
       request: null,
+      count: 0,
       alertMessage: {
+        key: 0,
         status: '',
         message: ''
       }
@@ -121,23 +123,37 @@ export default {
           })
         });
 
-        this.alertMessage = {
-          status: 'success',
-          message: 'Request approved successfully!'
-        };
+        if (!response.ok) {
+          const errorData = await response.json();
+          this.count = this.count + 1;
+          this.alertMessage = {
+            key: this.count,
+            status: 'fail',
+            message: errorData.error
+          };
+        }
+        else{
+          this.count = this.count + 1;
+          this.alertMessage = {
+            key: this.count,
+            status: 'success',
+            message: 'Request approved successfully!'
+          };
+        }
         
         this.closeDialog();
         this.$emit("update-requests");
       } 
       catch (error) {
         console.error("Error approving request:", error);
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: error.response.data.message
         };
       }
     },
-
     async rejectRequest() {
       try {
         const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/reject_wfh_request`, {
@@ -153,7 +169,9 @@ export default {
           })
         });
         
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'success',
           message: 'Request rejected successfully!'
         }
@@ -163,7 +181,9 @@ export default {
       } 
       catch (error) {
         console.error("Error rejecting request:", error);
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: error.response.data.message
         };
@@ -185,7 +205,9 @@ export default {
           })
         });
 
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'success',
           message: 'Request withdrawn successfully!'
         };
@@ -195,7 +217,9 @@ export default {
       } 
       catch (error) {
         console.error("Error withdrawing request:", error);
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: error.response.data.message
         };

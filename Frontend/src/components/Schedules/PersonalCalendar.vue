@@ -4,7 +4,7 @@
   <WithdrawWFHDialog ref="withdrawWFHDialog" @wfh-withdrawn="loadSchedule" />
   <AlertMessage 
       v-if="alertMessage.status" 
-      :key="alertMessage.message"
+      :key="alertMessage.key"
       :status="alertMessage.status" 
       :message="alertMessage.message"
     />
@@ -41,7 +41,9 @@ export default {
           end: endDate.toISOString().split('T')[0],
         },
       },
+      count: 0,
       alertMessage: {
+        key: 0,
         status: '',
         message: ''
       }
@@ -62,7 +64,9 @@ export default {
         });
       } 
       else {
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: 'Event cannot be withdrawn.'
         };
@@ -87,13 +91,17 @@ export default {
 
       try {
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/apply_wfh_request`, payload);
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'successs',
           message: 'Successfully applied'
         };
       } 
       catch (error) {
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: 'Failed to apply'
         };
@@ -132,7 +140,9 @@ export default {
           this.calendarOptions.events = events;
         } 
         else {
+          this.count = this.count + 1;
           this.alertMessage = {
+            key: this.count,
             status: 'fail',
             message: 'No WFH requests found for the user.'
           };
@@ -140,7 +150,9 @@ export default {
         }
       } 
       catch (error) {
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: error.response.data.message
         };

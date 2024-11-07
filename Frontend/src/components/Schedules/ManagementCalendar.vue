@@ -13,7 +13,7 @@
 
     <AlertMessage 
       v-if="alertMessage.status" 
-      :key="alertMessage.message"
+      :key="alertMessage.key"
       :status="alertMessage.status" 
       :message="alertMessage.message"
     />
@@ -54,7 +54,9 @@ export default {
           end: endDate.toISOString().split('T')[0]
         }
       },
+      count: 0,
       alertMessage: {
+        key: 0,
         status: '',
         message: ''
       }
@@ -80,7 +82,9 @@ export default {
         }
       } 
       catch (error) {
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: error.response.data.message
         };
@@ -95,7 +99,9 @@ export default {
         }
       } 
       catch (error) {
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: error.response.data.message
         };
@@ -121,17 +127,22 @@ export default {
         }).flat();
 
         this.calendarOptions.events = events;
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'success',
           message: 'Team Schedule Loaded Successfully'
         };
         
       } 
       catch (error) {
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
           message: error.response.data.message
         };
+        this.calendarOptions.events = [];
         console.error('Error fetching WFH schedule:', error.response.data.message);
       }
     },
