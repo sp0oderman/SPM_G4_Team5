@@ -5,6 +5,12 @@
         @update-requests="fetchWithdawalRequests"
       />
     </div>
+    <AlertMessage
+      v-if="alertMessage.status"
+      :status="alertMessage.status"
+      :message="alertMessage.message"
+      :key="alertMessage.message"
+    />
 </template>
 
 <script>
@@ -13,7 +19,11 @@ import { useAuthStore } from '@/stores/auth';
 export default {
   data() {
     return {
-      withdawalRequests: []
+      withdawalRequests: [],
+      alertMessage: {
+        status: '',
+        message: ''
+      }
     };
   },
   mounted() {
@@ -33,6 +43,10 @@ export default {
       } 
       catch (error) {
         console.error("Error fetching withdrawal requests:", error);
+        this.alertMessage = {
+            status: 'fail',
+            message: error.response.data.message
+        };
       }
     }
   }

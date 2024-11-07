@@ -19,7 +19,7 @@
         
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="secondary" variant="text" @click="openDialog(request.request_id, request.recurring_id)" 
+          <v-btn color="secondary" variant="text" @click="openDialog(request)" 
           :disabled="request.status === 'Rejected' || request.status === 'Withdrawn'">
               Withdraw
           </v-btn>
@@ -29,7 +29,7 @@
       <!-- Request Dialog -->
       <v-dialog v-model="dialog" max-width="600px">
           <v-card>
-              <v-card-title class="headline">Selected Withdrawal Request: {{ selectedRequestId }}</v-card-title>
+              <v-card-title class="headline">Selected Withdrawal Request: {{ this.request.request_id }}</v-card-title>
               <v-card-text>
               <v-textarea v-model="reason" label="Reason for Withdrawal (Mandatory)" outlined></v-textarea>
               </v-card-text>
@@ -46,6 +46,12 @@
       </v-dialog>
   
     </v-expansion-panels>
+    <AlertMessage
+      v-if="alertMessage.status"
+      :status="alertMessage.status"
+      :message="alertMessage.message"
+      :key="alertMessage.message"
+    />
 </template>
 
 <script>
@@ -58,16 +64,20 @@ export default {
       required: true
     }
   },
+  emits: ['update-requests'],
   data() {
     return {
       dialog: false,
       reason: '',
-      recurring_id: null,
-      selectedRequestId: null,
+      request: null,
+      alertMessage: {
+        status: '',
+        message: ''
+      }
     };
   },
   methods: {
-    async withdrawRequest(recurring_id) {
+    async withdrawRequest() {
       try {
         await fetch(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/withdraw_wfh_request`, {
           method: "PUT",
@@ -75,29 +85,42 @@ export default {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({ 
-            request_id: this.selectedRequestId, 
+            request_id: this.request.request_id, 
             reporting_manager: useAuthStore().getUser.staff_id,
             reason_for_status: this.reason,
-            recurring_id: this.recurring_id,
+            recurring_id: this.request.recurring_id,
           })
         });
+
+        let message = "";
+        if (this.request.status === "Pending"){
+          message = 'Request withdrawn successfully!'
+        }
+        else{
+          message = 'Applied for withdrawal!'
+        }
+
+        this.alertMessage = {
+          status: 'success',
+          message: message
+        };
         this.closeDialog();
         this.$emit("update-requests");
       } 
       catch (error) {
         console.error("Error rejecting request:", error);
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
       }
     },
-    openDialog(requestId, recurring_id) {
-      this.selectedRequestId = requestId;
-      this.recurring_id = recurring_id;
+    openDialog(request) {
+      this.request = request;
       this.dialog = true;
     },
     closeDialog() {
       this.dialog = false;
-      this.reason = '';
-      this.recurring_id = null;
-      this.selectedRequestId = null;
     },
     formatDate(dateString) {
       const date = new Date(dateString);

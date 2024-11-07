@@ -1,5 +1,13 @@
 <template>
   <FullCalendar :options="calendarOptions" />
+
+  <AlertMessage 
+      v-if="alertMessage.status" 
+      :key="alertMessage.message"
+      :status="alertMessage.status" 
+      :message="alertMessage.message"
+    />
+
 </template>
   
 <script>
@@ -21,17 +29,17 @@ export default {
     endDate.setMonth(today.getMonth() + 3);
     endDate.setDate(today.getDate() + 1);
     
-    const getUser = useAuthStore().getUser;
+    const user = useAuthStore().getUser;
     let reportingId = null;
     if (useAuthStore().getAccessControl === "ceo"){
-      reportingId = getUser.staff_id;
+      reportingId = user.staff_id;
     }
     else{
-      reportingId = getUser.reporting_manager;
+      reportingId = user.reporting_manager;
     }
 
     return {
-      user: getUser,
+      user: user,
       reportingManagerId: reportingId,
       teamSize: 0,
       calendarOptions: {
@@ -43,6 +51,10 @@ export default {
           start: startDate.toISOString().split('T')[0],
           end: endDate.toISOString().split('T')[0]
         }
+      },
+      alertMessage: {
+        status: '',
+        message: ''
       }
     };
   },
@@ -54,11 +66,18 @@ export default {
           this.teamSize = response.data.data.team_size;
         } 
         else {
-          console.warn('No reporting managers found.');
+          this.alertMessage = {
+            status: 'fail',
+            message: 'No reporting managers found.'
+          };
         }
       } 
       catch (error) {
-        console.error('Error fetching reporting managers:', error);
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
+        console.error('Error fetching reporting managers:', error.response.data.message);
       }
     },
     async loadTeamSchedule() {
@@ -69,7 +88,6 @@ export default {
       }
 
       try {
-        const user = useAuthStore().getUser;
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/team/strength/${this.reportingManagerId}/${this.calendarOptions.validRange.start}/${this.calendarOptions.validRange.end}`);
         const dates = response.data.data.dates;
         const events = Object.keys(dates).map(date => {
@@ -81,14 +99,14 @@ export default {
         }).flat();
 
         this.calendarOptions.events = events;
-
-        if (events.length === 0) {
-            console.error('No WFH requests.');
-        }
         
       } 
       catch (error) {
-        console.error('Error fetching WFH schedule:', error);
+        console.error('Error fetching WFH schedule:', error.response.data.message);
+        this.alertMessage = {
+          status: 'fail',
+          message: "No one is WFH"
+        };
       }
     },
   },

@@ -12,6 +12,13 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <!-- AlertMessage -->
+  <AlertMessage
+      v-if="alertMessage.status"
+      :status="alertMessage.status"
+      :message="alertMessage.message"
+      :key="alertMessage.message"
+    />
 </template>
   
 <script>
@@ -19,25 +26,28 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
 export default {
+  emits: ['wfh-withdrawn'],
   data() {
     return {
       dialog: false,
       selectedDate: null,
       requestId: null,
       reason: "",
+      alertMessage: {
+        status: '',
+        message: ''
+      }
     };
   },
   methods: {
     open({ date, requestId }) {
+      this.reason = "";
       this.selectedDate = date;
       this.requestId = requestId;
       this.dialog = true;
     },
     close() {
       this.dialog = false;
-      this.selectedDate = null;
-      this.requestId = null;
-      this.reason = "";
     },
     async withdraw() {
       try {
@@ -49,17 +59,19 @@ export default {
           remarks: this.reason,
           request_datetime: new Date().toISOString()
         });
-        if (response.status === 200) {
-          console.log('Successfully withdrawn');
-          this.$emit('wfh-withdrawn');
-        } 
-        else {
-          console.log('Failed to withdraw');
-        }
+        this.alertMessage = {
+          status: 'Success',
+          message: 'Request approved successfully!'
+        };
+        this.$emit('wfh-withdrawn');
         this.close();
       } 
       catch (error) {
         console.log('Failed to withdraw', error);
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
       }
     },
   },
