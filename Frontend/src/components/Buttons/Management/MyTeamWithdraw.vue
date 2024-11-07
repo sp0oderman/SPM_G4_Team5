@@ -1,6 +1,6 @@
 <template>
     <v-btn variant="outlined" text @click="team">
-        My Team's Withdrawal Requests
+        Surbordinate's Withdrawal Requests
     </v-btn>
 </template>
 
