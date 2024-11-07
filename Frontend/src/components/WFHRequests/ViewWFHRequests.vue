@@ -50,7 +50,7 @@
       v-if="alertMessage.status"
       :status="alertMessage.status"
       :message="alertMessage.message"
-      :key="alertMessage.message"
+      :key="alertMessage.key"
     />
 </template>
 
@@ -70,7 +70,9 @@ export default {
       dialog: false,
       reason: '',
       request: null,
+      count: 0,
       alertMessage: {
+        key: 0,
         status: '',
         message: ''
       }
@@ -100,7 +102,9 @@ export default {
           message = 'Applied for withdrawal!'
         }
 
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'success',
           message: message
         };
@@ -108,10 +112,12 @@ export default {
         this.$emit("update-requests");
       } 
       catch (error) {
-        console.error("Error rejecting request:", error);
+        console.error("Error withdrawing request:", error);
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
-          message: error.response.data.message
+          message: "Error withdrawing request"
         };
       }
     },

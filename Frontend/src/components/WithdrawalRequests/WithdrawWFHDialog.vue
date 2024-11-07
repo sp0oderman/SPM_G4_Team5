@@ -17,7 +17,7 @@
       v-if="alertMessage.status"
       :status="alertMessage.status"
       :message="alertMessage.message"
-      :key="alertMessage.message"
+      :key="alertMessage.key"
     />
 </template>
   
@@ -33,7 +33,9 @@ export default {
       selectedDate: null,
       requestId: null,
       reason: "",
+      count: 0,
       alertMessage: {
+        key: 0,
         status: '',
         message: ''
       }
@@ -59,7 +61,9 @@ export default {
           remarks: this.reason,
           request_datetime: new Date().toISOString()
         });
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'Success',
           message: 'Request approved successfully!'
         };
@@ -68,9 +72,11 @@ export default {
       } 
       catch (error) {
         console.log('Failed to withdraw', error);
+        this.count = this.count + 1;
         this.alertMessage = {
+          key: this.count,
           status: 'fail',
-          message: error.response.data.message
+          message: "Failed to withdraw"
         };
       }
     },
