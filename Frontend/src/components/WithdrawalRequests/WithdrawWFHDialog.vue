@@ -26,6 +26,7 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
 export default {
+  emits: ['wfh-withdrawn'],
   data() {
     return {
       dialog: false,

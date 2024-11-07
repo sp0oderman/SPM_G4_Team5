@@ -93,6 +93,7 @@ export default {
       required: true
     }
   },
+  emits: ['update-requests'],
   data() {
     return {
       dialog: false,

@@ -3,7 +3,8 @@
     <v-toolbar-title>Allinone WFH System</v-toolbar-title>
     <v-spacer></v-spacer>
     <v-btn text @click="personal">My Schedule</v-btn>
-    <v-btn text @click="team">My Team's Schedule</v-btn>
+    <v-btn text @click="team">Surbordinate's Schedule</v-btn>
+    <v-btn text @click="colleague">Colleague's Schedule</v-btn>
     <v-btn text @click="overall">Teams Under Me</v-btn>
     <v-btn text @click="logout">Logout</v-btn>
   </v-app-bar>
@@ -19,6 +20,9 @@ export default {
     },
     team(){
       this.$router.push({ name: '/manager/TeamSchedule' });
+    },
+    colleague(){
+      this.$router.push({ name: '/manager/ColleagueSchedule' });
     },
     personal(){
       this.$router.push({ name: '/manager/PersonalSchedule' });
