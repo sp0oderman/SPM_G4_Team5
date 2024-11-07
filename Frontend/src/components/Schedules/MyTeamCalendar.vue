@@ -29,17 +29,17 @@ export default {
     endDate.setMonth(today.getMonth() + 3);
     endDate.setDate(today.getDate() + 1);
     
-    const getUser = useAuthStore().getUser;
+    const user = useAuthStore().getUser;
     let reportingId = null;
     if (useAuthStore().getAccessControl === "ceo"){
-      reportingId = getUser.staff_id;
+      reportingId = user.staff_id;
     }
     else{
-      reportingId = getUser.reporting_manager;
+      reportingId = user.reporting_manager;
     }
 
     return {
-      user: getUser,
+      user: user,
       reportingManagerId: reportingId,
       teamSize: 0,
       calendarOptions: {
@@ -77,7 +77,7 @@ export default {
           status: 'fail',
           message: error.response.data.message
         };
-        console.error('Error fetching reporting managers:', error);
+        console.error('Error fetching reporting managers:', error.response.data.message);
       }
     },
     async loadTeamSchedule() {
@@ -99,21 +99,13 @@ export default {
         }).flat();
 
         this.calendarOptions.events = events;
-
-        if (events.length === 0) {
-          this.alertMessage = {
-            status: 'fail',
-            message: error.response.data.message
-          };
-          console.error('No WFH requests.');
-        }
         
       } 
       catch (error) {
-        console.error('Error fetching WFH schedule:', error);
+        console.error('Error fetching WFH schedule:', error.response.data.message);
         this.alertMessage = {
           status: 'fail',
-          message: error.response.data.message
+          message: "No one is WFH"
         };
       }
     },

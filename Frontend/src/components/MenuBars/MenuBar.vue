@@ -3,7 +3,7 @@
     <v-toolbar-title>Allinone WFH System</v-toolbar-title>
     <v-spacer></v-spacer>
     <v-btn text @click="personal">My Schedule</v-btn>
-    <v-btn text @click="team">My Team's Schedule</v-btn>
+    <v-btn text @click="team">Colleague's Schedule</v-btn>
     <v-btn text @click="logout">Logout</v-btn>
   </v-app-bar>
 </template>
