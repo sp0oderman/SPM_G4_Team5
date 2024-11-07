@@ -2,6 +2,12 @@
   <FullCalendar :options="calendarOptions" />
   <ApplyWFHPrompt ref="applyWFHPrompt" @submit="handleApply" />
   <WithdrawWFHDialog ref="withdrawWFHDialog" @wfh-withdrawn="loadSchedule" />
+  <AlertMessage 
+      v-if="alertMessage.status" 
+      :key="alertMessage.message"
+      :status="alertMessage.status" 
+      :message="alertMessage.message"
+    />
 </template>
 
 <script>
@@ -35,6 +41,10 @@ export default {
           end: endDate.toISOString().split('T')[0],
         },
       },
+      alertMessage: {
+        status: '',
+        message: ''
+      }
     };
   },
   methods: {
@@ -50,8 +60,12 @@ export default {
           date: eventObj.start.toISOString().split('T')[0],
           requestId: eventObj.extendedProps.requestId,
         });
-      } else {
-        alert('Event cannot be withdrawn.');
+      } 
+      else {
+        this.alertMessage = {
+          status: 'fail',
+          message: 'Event cannot be withdrawn.'
+        };
       }
     },
 
@@ -73,9 +87,16 @@ export default {
 
       try {
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/apply_wfh_request`, payload);
-        console.log('successfully applied');
+        this.alertMessage = {
+          status: 'successs',
+          message: 'Successfully applied'
+        };
       } 
       catch (error) {
+        this.alertMessage = {
+          status: 'fail',
+          message: 'Failed to apply'
+        };
         console.log('failed to apply');
       }
     },
@@ -111,17 +132,19 @@ export default {
           this.calendarOptions.events = events;
         } 
         else {
+          this.alertMessage = {
+            status: 'fail',
+            message: 'No WFH requests found for the user.'
+          };
           console.error('No WFH requests found for the user.');
         }
       } 
       catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.warn('No WFH requests found for this user, treating as no data:', error.response.data);
-          this.calendarOptions.events = [];
-        } 
-        else {
-          console.error('Error fetching WFH schedule:', error);
-        }
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
+        console.error('Error fetching WFH schedule:', error);
       }
     },
   },

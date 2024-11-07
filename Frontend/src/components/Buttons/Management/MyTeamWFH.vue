@@ -1,6 +1,6 @@
 <template>
     <v-btn variant="outlined" text @click="team">
-        My Team's WFH Requests
+      Surbordinate's WFH Requests
     </v-btn>
 </template>
 
