@@ -45,7 +45,7 @@ export default {
         console.error("Error fetching withdrawal requests:", error);
         this.alertMessage = {
             status: 'fail',
-            message: error.response.data.message
+            message: "No Withdrawal requests"
         };
       }
     }

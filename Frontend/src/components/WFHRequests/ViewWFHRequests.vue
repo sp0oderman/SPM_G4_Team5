@@ -108,10 +108,10 @@ export default {
         this.$emit("update-requests");
       } 
       catch (error) {
-        console.error("Error rejecting request:", error);
+        console.error("Error withdrawing request:", error);
         this.alertMessage = {
           status: 'fail',
-          message: error.response.data.message
+          message: "Error withdrawing request"
         };
       }
     },

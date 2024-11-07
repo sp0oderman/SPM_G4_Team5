@@ -70,7 +70,7 @@ export default {
         console.log('Failed to withdraw', error);
         this.alertMessage = {
           status: 'fail',
-          message: error.response.data.message
+          message: "Failed to withdraw"
         };
       }
     },

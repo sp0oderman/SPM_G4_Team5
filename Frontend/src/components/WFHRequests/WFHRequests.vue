@@ -121,10 +121,19 @@ export default {
           })
         });
 
-        this.alertMessage = {
-          status: 'success',
-          message: 'Request approved successfully!'
-        };
+        if (!response.ok) {
+          const errorData = await response.json();
+          this.alertMessage = {
+            status: 'fail',
+            message: errorData.error
+          };
+        }
+        else{
+          this.alertMessage = {
+            status: 'success',
+            message: 'Request approved successfully!'
+          };
+        }
         
         this.closeDialog();
         this.$emit("update-requests");
@@ -137,7 +146,6 @@ export default {
         };
       }
     },
-
     async rejectRequest() {
       try {
         const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/reject_wfh_request`, {

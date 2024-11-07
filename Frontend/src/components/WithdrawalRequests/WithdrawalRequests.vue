@@ -99,7 +99,7 @@ export default {
         console.error("Error approving request:", error);
         this.alertMessage = {
           status: 'fail',
-          message: error.response.data.message
+          message: "Error approving request"
         };
       }
     },
@@ -125,7 +125,7 @@ export default {
         console.error("Error rejecting request:", error);
         this.alertMessage = {
           status: 'fail',
-          message: error.response.data.message
+          message: "Error rejecting request"
         };
       }
     },

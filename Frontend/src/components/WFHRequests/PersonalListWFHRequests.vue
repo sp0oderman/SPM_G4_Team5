@@ -43,7 +43,7 @@
           console.error("Error fetching pending requests:", error);
           this.alertMessage = {
             status: 'fail',
-            message: error.response.data.message
+            message: "No WFH requests"
           };
         }
       }
