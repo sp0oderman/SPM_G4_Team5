@@ -44,10 +44,17 @@
         </v-dialog>
 
     </v-expansion-panels>
+
+    <!-- AlertMessage -->
+    <AlertMessage
+      v-if="alertMessage.status"
+      :status="alertMessage.status"
+      :message="alertMessage.message"
+      :key="alertMessage.message"
+    />
 </template>
   
 <script>
-import { useAuthStore } from '@/stores/auth';
 
 export default {
   props: {
@@ -60,7 +67,11 @@ export default {
     return {
       dialog: false,
       reason: '',
-      request: null
+      request: null,
+      alertMessage: {
+        status: '',
+        message: ''
+      }
     };
   },
   methods: {
@@ -76,10 +87,18 @@ export default {
             reason_for_status: this.reason
           })
         });
+        this.alertMessage = {
+          status: 'Success',
+          message: 'Request approved successfully!'
+        };
         this.closeDialog();
       } 
       catch (error) {
         console.error("Error approving request:", error);
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
       }
     },
     async rejectRequest() {
@@ -94,20 +113,27 @@ export default {
             reason_for_status: this.reason
           })
         });
+        this.alertMessage = {
+          status: 'Success',
+          message: 'Request rejected successfully!'
+        };
         this.closeDialog();
       } 
       catch (error) {
         console.error("Error rejecting request:", error);
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
       }
     },
     openDialog(request) {
+      this.reason = '';
       this.request = request;
       this.dialog = true;
     },
     closeDialog() {
       this.dialog = false;
-      // this.reason = '';
-      // this.request = null;
     },
   }
 };

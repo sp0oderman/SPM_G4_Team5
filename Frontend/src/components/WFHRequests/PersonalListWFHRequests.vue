@@ -5,6 +5,12 @@
         @update-requests="fetchPendingRequests"
       />
     </div>
+    <AlertMessage
+      v-if="alertMessage.status"
+      :status="alertMessage.status"
+      :message="alertMessage.message"
+      :key="alertMessage.message"
+    />
   </template>
   
   <script>
@@ -13,7 +19,11 @@
   export default {
     data() {
       return {
-        pendingRequests: []
+        pendingRequests: [],
+        alertMessage: {
+          status: '',
+          message: ''
+        }
       };
     },
     mounted() {
@@ -27,11 +37,14 @@
             throw new Error("Failed to fetch pending requests");
           }
           const data = await response.json();
-          console.log(data.data)
           this.pendingRequests = data.data.requests;
         } 
         catch (error) {
           console.error("Error fetching pending requests:", error);
+          this.alertMessage = {
+            status: 'fail',
+            message: error.response.data.message
+          };
         }
       }
     }
