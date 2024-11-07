@@ -131,7 +131,7 @@ class WFH_Requests_Service:
 
             # Example business logic: enforce 50% team limit
             wfh_count = self.db.session.query(WFH_Requests).filter_by(status='Approved', chosen_date=wfh_request.chosen_date, reporting_manager=wfh_request.reporting_manager).count()
-            if wfh_count / team_size > 0.5:
+            if wfh_count / team_size >= 0.5:
                 return {"error": "More than 50 percent of the team is already working from home"}, 400
 
             # Approve the request if within limits
