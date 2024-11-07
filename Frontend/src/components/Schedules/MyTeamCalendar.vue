@@ -1,5 +1,13 @@
 <template>
   <FullCalendar :options="calendarOptions" />
+
+  <AlertMessage 
+      v-if="alertMessage.status" 
+      :key="alertMessage.message"
+      :status="alertMessage.status" 
+      :message="alertMessage.message"
+    />
+
 </template>
   
 <script>
@@ -43,6 +51,10 @@ export default {
           start: startDate.toISOString().split('T')[0],
           end: endDate.toISOString().split('T')[0]
         }
+      },
+      alertMessage: {
+        status: '',
+        message: ''
       }
     };
   },
@@ -54,10 +66,17 @@ export default {
           this.teamSize = response.data.data.team_size;
         } 
         else {
-          console.warn('No reporting managers found.');
+          this.alertMessage = {
+            status: 'fail',
+            message: 'No reporting managers found.'
+          };
         }
       } 
       catch (error) {
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
         console.error('Error fetching reporting managers:', error);
       }
     },
@@ -69,7 +88,6 @@ export default {
       }
 
       try {
-        const user = useAuthStore().getUser;
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/wfh_requests/team/strength/${this.reportingManagerId}/${this.calendarOptions.validRange.start}/${this.calendarOptions.validRange.end}`);
         const dates = response.data.data.dates;
         const events = Object.keys(dates).map(date => {
@@ -83,12 +101,20 @@ export default {
         this.calendarOptions.events = events;
 
         if (events.length === 0) {
-            console.error('No WFH requests.');
+          this.alertMessage = {
+            status: 'fail',
+            message: error.response.data.message
+          };
+          console.error('No WFH requests.');
         }
         
       } 
       catch (error) {
         console.error('Error fetching WFH schedule:', error);
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
       }
     },
   },

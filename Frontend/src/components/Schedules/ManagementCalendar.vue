@@ -1,5 +1,6 @@
 <template>
-  <v-select
+  <div>
+    <v-select
       label="Reporting Manager"
       :items="reportingManagers"
       item-title="name"
@@ -7,9 +8,18 @@
       v-model="selectedManager"
       v-show="visible"
     ></v-select>
-  <FullCalendar :options="calendarOptions" />
+
+    <FullCalendar :options="calendarOptions" />
+
+    <AlertMessage 
+      v-if="alertMessage.status" 
+      :key="alertMessage.message"
+      :status="alertMessage.status" 
+      :message="alertMessage.message"
+    />
+  </div>
 </template>
-  
+
 <script>
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -19,7 +29,7 @@ import { useAuthStore } from '@/stores/auth';
 
 export default {
   components: {
-    FullCalendar
+    FullCalendar,
   },
   data() {
     const today = new Date();
@@ -43,6 +53,10 @@ export default {
           start: startDate.toISOString().split('T')[0],
           end: endDate.toISOString().split('T')[0]
         }
+      },
+      alertMessage: {
+        status: '',
+        message: ''
       }
     };
   },
@@ -54,7 +68,7 @@ export default {
           response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/reporting_managers_list`);
         }
         else{
-          response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/reporting_managers_under_me_list/`);
+          response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/employees/reporting_managers_under_me_list/${useAuthStore().getUser.staff_id}`);
         }
         if (response.data.code === 200) {
           this.visible = true;
@@ -62,15 +76,15 @@ export default {
             id: manager.staff_id,
             name: manager.staff_fname + " " + manager.staff_lname,
           }));
+
         }
       } 
       catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.error('No reporting managers found.');
-        } 
-        else {
-          console.error('Error fetching reporting managers:', error);
-        }
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
+        console.error('Error fetching reporting managers:', error);
       }
     },
     async getTeamSize(){
@@ -81,12 +95,11 @@ export default {
         }
       } 
       catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.error('No team found for selected reporting manager.');
-        } 
-        else {
-          console.error('Error fetching selected reporting manager team:', error);
-        }
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
+        console.error('Error fetching selected reporting manager team:', error.response.data.message);
       }
     },
     async loadSpecificTeamSchedule() {
@@ -108,15 +121,18 @@ export default {
         }).flat();
 
         this.calendarOptions.events = events;
+        this.alertMessage = {
+          status: 'success',
+          message: 'Team Schedule Loaded Successfully'
+        };
         
       } 
       catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.error('No WFH requests.');
-        } 
-        else {
-          console.error('Error fetching WFH schedule:', error);
-        }
+        this.alertMessage = {
+          status: 'fail',
+          message: error.response.data.message
+        };
+        console.error('Error fetching WFH schedule:', error.response.data.message);
       }
     },
   },
