@@ -1,6 +1,6 @@
 <template>
     <v-btn variant="outlined" text @click="team">
-        My Team's Schedule
+        Surbordinate's Schedules
     </v-btn>
 </template>
 
@@ -10,7 +10,7 @@ import { useAuthStore } from '@/stores/auth';
 export default {
   methods: {
     team(){
-      this.$router.push({ name: `/${useAuthStore().getAccessControl}/TeamSchedule` });
+      this.$router.push({ name: `/${useAuthStore().getAccessControl}/SurbordinateSchedule` });
     }
   },
 };

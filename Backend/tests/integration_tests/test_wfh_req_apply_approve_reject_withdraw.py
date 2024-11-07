@@ -50,9 +50,61 @@ class BaseTestCase(TestCase):
             reporting_manager=140894,
             role=2
         )
+        # Add an employee who reports to RM
+        employee1 = Employees(
+            staff_id=140001,
+            staff_fname="empfname",
+            staff_lname="emplname",
+            dept="Sales",
+            position="Account Manager",
+            country="Singapore",
+            email="sthauheed4.2022@smu.edu.sg",
+            reporting_manager=140894,
+            role=2
+        )
+        # Add an employee who reports to RM
+        employee2 = Employees(
+            staff_id=140009,
+            staff_fname="empfname",
+            staff_lname="emplname",
+            dept="Sales",
+            position="Account Manager",
+            country="Singapore",
+            email="sthauheed3.2022@smu.edu.sg",
+            reporting_manager=140894,
+            role=2
+        )
+        # Add an employee who reports to RM
+        employee3 = Employees(
+            staff_id=140008,
+            staff_fname="empfname",
+            staff_lname="emplname",
+            dept="Sales",
+            position="Account Manager",
+            country="Singapore",
+            email="sthauheed2.2022@smu.edu.sg",
+            reporting_manager=140894,
+            role=2
+        )
+        # Add an employee who reports to RM
+        employee4 = Employees(
+            staff_id=140007,
+            staff_fname="empfname",
+            staff_lname="emplname",
+            dept="Sales",
+            position="Account Manager",
+            country="Singapore",
+            email="sthauheed1.2022@smu.edu.sg",
+            reporting_manager=140894,
+            role=2
+        )
 
         db.session.add(reportingManager)
         db.session.add(employee)
+        db.session.add(employee1)
+        db.session.add(employee2)
+        db.session.add(employee3)
+        db.session.add(employee4)
         db.session.commit()
 
     def tearDown(self):
@@ -108,7 +160,63 @@ class TestWFHRequests(BaseTestCase):
             recurring_id=-1,
             reason_for_status=None
         )
+
+        wfh_request2 = WFH_Requests(
+            staff_id=140001, 
+            reporting_manager=140894,
+            dept='Sales',
+            chosen_date='2024-10-10', 
+            arrangement_type='Full Day', 
+            request_datetime='2024-08-08',
+            status='Pending',
+            remarks='Doctor appointment',
+            recurring_id=-1,
+            reason_for_status=None
+        )
+
+        wfh_request3 = WFH_Requests(
+            staff_id=140003, 
+            reporting_manager=140894,
+            dept='Sales',
+            chosen_date='2024-10-10', 
+            arrangement_type='Full Day', 
+            request_datetime='2024-08-08',
+            status='Pending',
+            remarks='Doctor appointment',
+            recurring_id=-1,
+            reason_for_status=None
+        )
+
+        wfh_request4 = WFH_Requests(
+            staff_id=140004, 
+            reporting_manager=140894,
+            dept='Sales',
+            chosen_date='2024-10-10', 
+            arrangement_type='Full Day', 
+            request_datetime='2024-08-08',
+            status='Pending',
+            remarks='Doctor appointment',
+            recurring_id=-1,
+            reason_for_status=None
+        )
+
+        wfh_request5 = WFH_Requests(
+            staff_id=140009, 
+            reporting_manager=140894,
+            dept='Sales',
+            chosen_date='2024-10-10', 
+            arrangement_type='Full Day', 
+            request_datetime='2024-08-08',
+            status='Pending',
+            remarks='Doctor appointment',
+            recurring_id=-1,
+            reason_for_status=None
+        )
         db.session.add(wfh_request)
+        db.session.add(wfh_request2)
+        db.session.add(wfh_request3)
+        db.session.add(wfh_request4)
+        db.session.add(wfh_request5)
         db.session.commit()
 
         # Approve the WFH request

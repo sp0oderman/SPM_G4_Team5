@@ -63,6 +63,7 @@ export default {
       required: true
     }
   },
+  emits: ['update-requests'],
   data() {
     return {
       dialog: false,
@@ -91,6 +92,7 @@ export default {
           status: 'Success',
           message: 'Request approved successfully!'
         };
+        this.$emit('update-requests');
         this.closeDialog();
       } 
       catch (error) {
