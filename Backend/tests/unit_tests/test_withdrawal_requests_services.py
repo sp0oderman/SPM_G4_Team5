@@ -11,6 +11,8 @@ from src.models.withdrawal_requests import Withdrawal_Requests
 from src.models.wfh_requests import WFH_Requests
 from src.models.employees import Employees
 
+from datetime import datetime, timedelta
+
 class TestWithdrawalRequestsService(unittest.TestCase):
     def setUp(self):
         # Set up a mock database session and initialize the service
@@ -214,6 +216,23 @@ class TestWithdrawalRequestsService(unittest.TestCase):
         self.assertEqual(response["message"], "Withdrawal request rejected successfully!")
         self.assertEqual(mock_withdrawal_request.status, "Rejected")
         self.assertEqual(mock_withdrawal_request.reason_for_status, "Not eligible")
-        
+
+    @patch('src.services.withdrawal_requests_services.datetime')
+    def test_reject_old_pending_withdrawal_requests(self, mock_datetime):
+        # Set a fixed date for datetime to ensure consistency
+        current_date = datetime(2024, 12, 1)
+        mock_datetime.now.return_value = current_date
+
+        # Set up a mock Withdrawal request that is older than 2 months and pending
+        old_request = MagicMock(status="Pending", request_datetime=current_date - timedelta(days=61))
+        self.db.session.query.return_value.filter.return_value.all.return_value = [old_request]
+
+        # Call the method
+        self.service.reject_old_pending_withdrawal_requests()
+
+        # Assertions
+        self.assertEqual(old_request.status, "Rejected")
+        self.db.session.commit.assert_called_once()
+
 if __name__ == "__main__":
     unittest.main()
