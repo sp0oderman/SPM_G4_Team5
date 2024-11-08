@@ -18,6 +18,10 @@
 </p>
 <br>
 
+## Deployment
+
+<b>You can access the live application here:</b> [Click Me!!!](https://spm-g4-team5.vercel.app/)
+
 ##  Table of Contents
 
 - [ Overview](#-overview)
