@@ -62,12 +62,34 @@
     │   ├── requirements.txt
     │   ├── src
     │   │   ├── models
+    │   │   │   ├── employees.py
+    │   │   │   ├── wfh_requests.py
+    │   │   │   └── withdrawal_requests.py
     │   │   ├── routes
+    │   │   │   ├── employees_routes.py
+    │   │   │   ├── wfh_requests_routes.py
+    │   │   │   └── withdrawal_requests_routes.py
     │   │   ├── services
+    │   │   │   ├── employees_services.py
+    │   │   │   ├── wfh_requests_services.py
+    │   │   │   └── withdrawal_requests_services.py
     │   │   └── utils
+    │   │       └── email_functions.py
     │   ├── tests
     │   │   ├── integration_tests
+    │   │   │   ├── test_employees.py
+    │   │   │   ├── test_login.py
+    │   │   │   ├── test_wfh_req_apply_approve_reject_withdraw.py
+    │   │   │   ├── test_wfh_req_util.py
+    │   │   │   ├── test_withdrawal_req_apply_approve_reject.py
+    │   │   │   └── test_withdrawal_req_util.py
     │   │   └── unit_tests
+    │   │       ├── test_employees_routes.py
+    │   │       ├── test_employees_services.py
+    │   │       ├── test_wfh_requests_routes.py
+    │   │       ├── test_wfh_requests_services.py
+    │   │       ├── test_withdrawal_requests_routes.py
+    │   │       └── test_withdrawal_requests_services.py
     │   └── vercel.json
     ├── Frontend
     │   ├── .browserslistrc
@@ -84,14 +106,83 @@
     │   ├── src
     │   │   ├── App.vue
     │   │   ├── assets
+    │   │   │   ├── logo.png
+    │   │   │   └── logo.svg
     │   │   ├── components
+    │   │   │   ├── Alerts
+    │   │   │   │   └── AlertMessage.vue
+    │   │   │   ├── Buttons
+    │   │   │   │   ├── Management
+    │   │   │   │   └── Personal
+    │   │   │   ├── MenuBars
+    │   │   │   │   ├── CEOMenuBar.vue
+    │   │   │   │   ├── HRMenuBar.vue
+    │   │   │   │   ├── ManagerMenuBar.vue
+    │   │   │   │   └── MenuBar.vue
+    │   │   │   ├── README.md
+    │   │   │   ├── Schedules
+    │   │   │   │   ├── Legend.vue
+    │   │   │   │   ├── ManagementCalendar.vue
+    │   │   │   │   ├── MyTeamCalendar.vue
+    │   │   │   │   ├── PersonalCalendar.vue
+    │   │   │   │   └── SurbordinateCalendar.vue
+    │   │   │   ├── WFHRequests
+    │   │   │   │   ├── ApplyWFHPrompt.vue
+    │   │   │   │   ├── ListWFHRequests.vue
+    │   │   │   │   ├── PersonalListWFHRequests.vue
+    │   │   │   │   ├── ViewWFHRequests.vue
+    │   │   │   │   └── WFHRequests.vue
+    │   │   │   └── WithdrawalRequests
+    │   │   │       ├── ListWithdrawalRequests.vue
+    │   │   │       ├── PersonalListWithdrawalRequests.vue
+    │   │   │       ├── ViewWithdrawalRequests.vue
+    │   │   │       ├── WithdrawWFHDialog.vue
+    │   │   │       └── WithdrawalRequests.vue
     │   │   ├── layouts
+    │   │   │   ├── README.md
+    │   │   │   └── default.vue
     │   │   ├── main.js
     │   │   ├── pages
+    │   │   │   ├── README.md
+    │   │   │   ├── ceo
+    │   │   │   │   ├── OverallSchedule.vue
+    │   │   │   │   ├── SurbordinateSchedule.vue
+    │   │   │   │   ├── TeamWFHRequests.vue
+    │   │   │   │   └── TeamWithdrawalRequests.vue
+    │   │   │   ├── hr
+    │   │   │   │   ├── OverallSchedule.vue
+    │   │   │   │   ├── PersonalSchedule.vue
+    │   │   │   │   ├── PersonalWFHRequests.vue
+    │   │   │   │   ├── PersonalWithdrawalRequests.vue
+    │   │   │   │   └── TeamSchedule.vue
+    │   │   │   ├── index.vue
+    │   │   │   ├── manager
+    │   │   │   │   ├── ColleagueSchedule.vue
+    │   │   │   │   ├── OverallSchedule.vue
+    │   │   │   │   ├── PersonalSchedule.vue
+    │   │   │   │   ├── PersonalWFHRequests.vue
+    │   │   │   │   ├── PersonalWithdrawalRequests.vue
+    │   │   │   │   ├── SurbordinateSchedule.vue
+    │   │   │   │   ├── TeamWFHRequests.vue
+    │   │   │   │   └── TeamWithdrawalRequests.vue
+    │   │   │   └── staff
+    │   │   │       ├── PersonalSchedule.vue
+    │   │   │       ├── PersonalWFHRequests.vue
+    │   │   │       ├── PersonalWithdrawalRequests.vue
+    │   │   │       └── TeamSchedule.vue
     │   │   ├── plugins
+    │   │   │   ├── README.md
+    │   │   │   ├── index.js
+    │   │   │   └── vuetify.js
     │   │   ├── router
+    │   │   │   └── index.js
     │   │   ├── stores
+    │   │   │   ├── README.md
+    │   │   │   ├── auth.js
+    │   │   │   └── index.js
     │   │   └── styles
+    │   │       ├── README.md
+    │   │       └── settings.scss
     │   ├── vercel.json
     │   └── vite.config.mjs
     └── README.md
