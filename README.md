@@ -18,6 +18,10 @@
 </p>
 <br>
 
+## Deployment
+
+<b>You can access the live application here:</b> [Click Me!!!](https://spm-g4-team5.vercel.app/)
+
 ##  Table of Contents
 
 - [ Overview](#-overview)
@@ -602,7 +606,6 @@ run 'npm run dev' in the terminal
 
 ###  Testing
 Run the test suite using the following command:
-**Using `npm`** &nbsp; [<img align="center" src="" />]()
 
 1. Navigate to the <b>Backend</b> of the project directory:
 
