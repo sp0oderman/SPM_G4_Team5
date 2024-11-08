@@ -529,60 +529,74 @@ Install the Application using the following method:
 1. Clone the SPM_G4_Team5 repository:
 
 ```sh
-❯ git clone https://github.com/sp0oderman/SPM_G4_Team5
+git clone https://github.com/sp0oderman/SPM_G4_Team5
 ```
 
 2. Navigate to the <b>Backend</b> of the project directory:
 
 ```sh
-❯ cd SPM_G4_Team5/Backend
+cd SPM_G4_Team5/Backend
 ```
 
 3. Install the project <b>Backend</b> dependencies:
 
 ```sh
-❯ run 'pip install requirements.txt' in the terminal
+run 'pip install -r requirements.txt' in the terminal
 ```
 
 4. Navigate to the <b>Frontend</b> of the project directory:
 
 ```sh
-❯ cd SPM_G4_Team5/Frontend
+cd SPM_G4_Team5/Frontend
 ```
 
 5. Install the project <b>Frontend</b> dependencies:
 
 ```sh
-❯ run 'npm install' in the terminal
+run 'npm install' in the terminal
 ```
 
-
-
 ###  Usage
+
+<b>Before running</b> the application, <b>set up the following environment variables:</b>
+
+| Variable Name        | Description                          | Example Value                            |
+|----------------------|--------------------------------------|------------------------------------------|
+| `DB_URI`             | Database connection URL              | `postgresql://user:pass@localhost/dbname`|
+| `SECRET_KEY`         | Secret key for application config    | `your-secret-key`                        |
+| `EMAIL_ACCOUNT`      | Base URL for backend API             | `name@gmail.com`                         |
+| `EMAIL_PASSWORD`     | Base URL for backend API             | `your_gmail_app_password`                |
+
+To set these variables use the commands below (Or you can use a .env file):
+- **On Windows:** Use `set` command, e.g., `set DB_URI=your_database_url`
+- **On MacOS/Linux:** Use `export` command, e.g., `export DB_URI=your_database_url`
+
+---
+
 Run the Application using the following commands (A separate terminal required for Frontend and Backend):
 
 1. In one terminal, navigate to the <b>Backend</b> of the project directory:
 
 ```sh
-❯ cd SPM_G4_Team5/Backend
+cd SPM_G4_Team5/Backend
 ```
 
 2. Run the <b>Backend</b> application:
 
 ```sh
-❯ run 'python app.py' in the terminal
+run 'python app.py' in the terminal
 ```
 
 3. In another terminal, navigate to the <b>Frontend</b> of the project directory:
 
 ```sh
-❯ cd SPM_G4_Team5/Frontend
+cd SPM_G4_Team5/Frontend
 ```
 
 4. Run the <b>Frontend</b> application:
 
 ```sh
-❯ run 'npm run prod' in the terminal
+run 'npm run dev' in the terminal
 ```
 
 
@@ -593,19 +607,19 @@ Run the test suite using the following command:
 1. Navigate to the <b>Backend</b> of the project directory:
 
 ```sh
-❯ cd SPM_G4_Team5/Backend
+cd SPM_G4_Team5/Backend
 ```
 
 2. To run <b>unit test</b> suite:
 
 ```sh
-❯ run 'python -m unittest discover -s tests/unit_tests'
+run 'python -m unittest discover -s tests/unit_tests' in the terminal
 ```
 
 3. To run <b>integration test</b> suite:
 
 ```sh
-❯ run 'python -m unittest discover -s tests/integration_tests'
+run 'python -m unittest discover -s tests/integration_tests' in the terminal
 ```
 
 ---
