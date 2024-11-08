@@ -602,7 +602,6 @@ run 'npm run dev' in the terminal
 
 ###  Testing
 Run the test suite using the following command:
-**Using `npm`** &nbsp; [<img align="center" src="" />]()
 
 1. Navigate to the <b>Backend</b> of the project directory:
 
