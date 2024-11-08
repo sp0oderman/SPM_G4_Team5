@@ -568,8 +568,8 @@ run 'npm install' in the terminal
 |----------------------|--------------------------------------|------------------------------------------|
 | `DB_URI`             | Database connection URL              | `postgresql://user:pass@localhost/dbname`|
 | `SECRET_KEY`         | Secret key for application config    | `your-secret-key`                        |
-| `EMAIL_ACCOUNT`      | Base URL for backend API             | `name@gmail.com`                         |
-| `EMAIL_PASSWORD`     | Base URL for backend API             | `your_gmail_app_password`                |
+| `EMAIL_ACCOUNT`      | Gmail Account to send Emails         | `name@gmail.com`                         |
+| `EMAIL_PASSWORD`     | Gmail Account App Password           | `your_gmail_app_password`                |
 
 To set these variables use the commands below (Or you can use a .env file):
 - **On Windows:** Use `set` command, e.g., `set DB_URI=your_database_url`
