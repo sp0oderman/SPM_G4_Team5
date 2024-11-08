@@ -573,7 +573,7 @@ To set these variables use the commands below (Or you can use a .env file):
 
 ---
 
-Run the Application using the following commands (A separate is terminal required for Frontend and Backend):
+Run the Application using the following commands (A separate terminal required for Frontend and Backend):
 
 1. In one terminal, navigate to the <b>Backend</b> of the project directory:
 
