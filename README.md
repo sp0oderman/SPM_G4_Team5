@@ -3,7 +3,7 @@
 </p>
 <p align="center"><h1 align="center">SPM_G4_TEAM5</h1></p>
 <p align="center">
-	<em><code>❯ REPLACE-ME</code></em>
+	<em><code>❯ WFH Management System</code></em>
 </p>
 <p align="center">
 	<img src="https://img.shields.io/github/license/sp0oderman/SPM_G4_Team5?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
@@ -29,176 +29,84 @@
   - [ Installation](#-installation)
   - [ Usage](#-usage)
   - [ Testing](#-testing)
-- [ Project Roadmap](#-project-roadmap)
-- [ Contributing](#-contributing)
-- [ License](#-license)
-- [ Acknowledgments](#-acknowledgments)
 
 ---
 
 ##  Overview
 
-<code>❯ REPLACE-ME</code>
+A <b>role-based</b> WFH management system that allows staff to <b>apply, modify, and withdraw WFH requests</b>, while providing managers, directors, and HR with <b>visibility and control over team and department schedules</b>.
 
 ---
 
 ##  Features
 
-<code>❯ REPLACE-ME</code>
+### Human Resources and Senior Management
+- **View Overall and Team Schedules**: 
+	- Access an overview of all teams' schedules.
+- **Staff Location Overview**: 
+	- See count of staff members working from the office or remotely, sorted by team.
+
+### Managers and Directors
+- **View Team Schedule**: 
+	- View the schedules of team members within their own team.
+- **Approve or Reject Arrangements**: 
+	- Review, Approve, or Reject WFH requests. 
+	- View a list of pending requests.
+- **Withdraw Arrangements**: 
+	- Manage approved WFH requests, with the option to withdraw specific ones.
+
+### Staff
+- **View Team Schedule**: 
+	- View the schedules of team members within their own team.
+- **View Own Schedule**: 
+	- Access a personal schedule to stay updated on own WFH requests.
+- **Apply for Flexible Working Arrangement**: 
+	- Submit requests for new flexible working arrangements.
+- **Withdraw Arrangement**: 
+	- Withdraw an approved or pending WFH request.
+</code>
 
 ---
 
 ##  Project Structure
 
-```sh
-└── SPM_G4_Team5/
-    ├── .github
-    │   └── workflows
-    │       └── ci.yml
-    ├── Backend
-    │   ├── __init__.py
-    │   ├── app.py
-    │   ├── config.py
-    │   ├── requirements.txt
-    │   ├── src
-    │   │   ├── models
-    │   │   │   ├── employees.py
-    │   │   │   ├── wfh_requests.py
-    │   │   │   └── withdrawal_requests.py
-    │   │   ├── routes
-    │   │   │   ├── employees_routes.py
-    │   │   │   ├── wfh_requests_routes.py
-    │   │   │   └── withdrawal_requests_routes.py
-    │   │   ├── services
-    │   │   │   ├── employees_services.py
-    │   │   │   ├── wfh_requests_services.py
-    │   │   │   └── withdrawal_requests_services.py
-    │   │   └── utils
-    │   │       └── email_functions.py
-    │   ├── tests
-    │   │   ├── integration_tests
-    │   │   │   ├── test_employees.py
-    │   │   │   ├── test_login.py
-    │   │   │   ├── test_wfh_req_apply_approve_reject_withdraw.py
-    │   │   │   ├── test_wfh_req_util.py
-    │   │   │   ├── test_withdrawal_req_apply_approve_reject.py
-    │   │   │   └── test_withdrawal_req_util.py
-    │   │   └── unit_tests
-    │   │       ├── test_employees_routes.py
-    │   │       ├── test_employees_services.py
-    │   │       ├── test_wfh_requests_routes.py
-    │   │       ├── test_wfh_requests_services.py
-    │   │       ├── test_withdrawal_requests_routes.py
-    │   │       └── test_withdrawal_requests_services.py
-    │   └── vercel.json
-    ├── Frontend
-    │   ├── .browserslistrc
-    │   ├── .editorconfig
-    │   ├── .eslintrc-auto-import.json
-    │   ├── .eslintrc.js
-    │   ├── README.md
-    │   ├── index.html
-    │   ├── jsconfig.json
-    │   ├── package-lock.json
-    │   ├── package.json
-    │   ├── public
-    │   │   └── favicon.ico
-    │   ├── src
-    │   │   ├── App.vue
-    │   │   ├── assets
-    │   │   │   ├── logo.png
-    │   │   │   └── logo.svg
-    │   │   ├── components
-    │   │   │   ├── Alerts
-    │   │   │   │   └── AlertMessage.vue
-    │   │   │   ├── Buttons
-    │   │   │   │   ├── Management
-    │   │   │   │   └── Personal
-    │   │   │   ├── MenuBars
-    │   │   │   │   ├── CEOMenuBar.vue
-    │   │   │   │   ├── HRMenuBar.vue
-    │   │   │   │   ├── ManagerMenuBar.vue
-    │   │   │   │   └── MenuBar.vue
-    │   │   │   ├── README.md
-    │   │   │   ├── Schedules
-    │   │   │   │   ├── Legend.vue
-    │   │   │   │   ├── ManagementCalendar.vue
-    │   │   │   │   ├── MyTeamCalendar.vue
-    │   │   │   │   ├── PersonalCalendar.vue
-    │   │   │   │   └── SurbordinateCalendar.vue
-    │   │   │   ├── WFHRequests
-    │   │   │   │   ├── ApplyWFHPrompt.vue
-    │   │   │   │   ├── ListWFHRequests.vue
-    │   │   │   │   ├── PersonalListWFHRequests.vue
-    │   │   │   │   ├── ViewWFHRequests.vue
-    │   │   │   │   └── WFHRequests.vue
-    │   │   │   └── WithdrawalRequests
-    │   │   │       ├── ListWithdrawalRequests.vue
-    │   │   │       ├── PersonalListWithdrawalRequests.vue
-    │   │   │       ├── ViewWithdrawalRequests.vue
-    │   │   │       ├── WithdrawWFHDialog.vue
-    │   │   │       └── WithdrawalRequests.vue
-    │   │   ├── layouts
-    │   │   │   ├── README.md
-    │   │   │   └── default.vue
-    │   │   ├── main.js
-    │   │   ├── pages
-    │   │   │   ├── README.md
-    │   │   │   ├── ceo
-    │   │   │   │   ├── OverallSchedule.vue
-    │   │   │   │   ├── SurbordinateSchedule.vue
-    │   │   │   │   ├── TeamWFHRequests.vue
-    │   │   │   │   └── TeamWithdrawalRequests.vue
-    │   │   │   ├── hr
-    │   │   │   │   ├── OverallSchedule.vue
-    │   │   │   │   ├── PersonalSchedule.vue
-    │   │   │   │   ├── PersonalWFHRequests.vue
-    │   │   │   │   ├── PersonalWithdrawalRequests.vue
-    │   │   │   │   └── TeamSchedule.vue
-    │   │   │   ├── index.vue
-    │   │   │   ├── manager
-    │   │   │   │   ├── ColleagueSchedule.vue
-    │   │   │   │   ├── OverallSchedule.vue
-    │   │   │   │   ├── PersonalSchedule.vue
-    │   │   │   │   ├── PersonalWFHRequests.vue
-    │   │   │   │   ├── PersonalWithdrawalRequests.vue
-    │   │   │   │   ├── SurbordinateSchedule.vue
-    │   │   │   │   ├── TeamWFHRequests.vue
-    │   │   │   │   └── TeamWithdrawalRequests.vue
-    │   │   │   └── staff
-    │   │   │       ├── PersonalSchedule.vue
-    │   │   │       ├── PersonalWFHRequests.vue
-    │   │   │       ├── PersonalWithdrawalRequests.vue
-    │   │   │       └── TeamSchedule.vue
-    │   │   ├── plugins
-    │   │   │   ├── README.md
-    │   │   │   ├── index.js
-    │   │   │   └── vuetify.js
-    │   │   ├── router
-    │   │   │   └── index.js
-    │   │   ├── stores
-    │   │   │   ├── README.md
-    │   │   │   ├── auth.js
-    │   │   │   └── index.js
-    │   │   └── styles
-    │   │       ├── README.md
-    │   │       └── settings.scss
-    │   ├── vercel.json
-    │   └── vite.config.mjs
-    └── README.md
+``` sh
+	SPM_G4_Team5
+	├── .github
+	│   └── workflows
+	│       └── ci.yml
+	├── Backend
+	│   ├── __init__.py
+	│   ├── app.py
+	│   ├── config.py
+	│   ├── requirements.txt
+	│   ├── src
+	│   │   ├── models
+	│   │   ├── routes
+	│   │   ├── services
+	│   │   └── utils
+	│   └── tests
+	│       ├── integration_tests
+	│       └── unit_tests
+	└── Frontend
+		└── src
+			├── components
+			│   ├── Alerts
+			│   ├── Buttons
+			│   ├── MenuBars
+			│   ├── Schedules
+			│   ├── WFHRequests
+			│   └── WithdrawalRequests
+			└── pages
+				├── ceo
+				├── hr
+				├── manager
+				└── staff
 ```
-
 
 ###  Project Index
 <details open>
 	<summary><b><code>SPM_G4_TEAM5/</code></b></summary>
-	<details> <!-- __root__ Submodule -->
-		<summary><b>__root__</b></summary>
-		<blockquote>
-			<table>
-			</table>
-		</blockquote>
-	</details>
 	<details> <!-- .github Submodule -->
 		<summary><b>.github</b></summary>
 		<blockquote>
@@ -208,7 +116,7 @@
 					<table>
 					<tr>
 						<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/.github/workflows/ci.yml'>ci.yml</a></b></td>
-						<td><code>❯ REPLACE-ME</code></td>
+						<td><code>❯ Configure CI using GitHub Actions</code></td>
 					</tr>
 					</table>
 				</blockquote>
@@ -218,79 +126,9 @@
 	<details> <!-- Frontend Submodule -->
 		<summary><b>Frontend</b></summary>
 		<blockquote>
-			<table>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/.eslintrc-auto-import.json'>.eslintrc-auto-import.json</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/package-lock.json'>package-lock.json</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/vite.config.mjs'>vite.config.mjs</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/vercel.json'>vercel.json</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/.browserslistrc'>.browserslistrc</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/jsconfig.json'>jsconfig.json</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/package.json'>package.json</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/.eslintrc.js'>.eslintrc.js</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/index.html'>index.html</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			</table>
 			<details>
 				<summary><b>src</b></summary>
 				<blockquote>
-					<table>
-					<tr>
-						<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/main.js'>main.js</a></b></td>
-						<td><code>❯ REPLACE-ME</code></td>
-					</tr>
-					<tr>
-						<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/App.vue'>App.vue</a></b></td>
-						<td><code>❯ REPLACE-ME</code></td>
-					</tr>
-					</table>
-					<details>
-						<summary><b>layouts</b></summary>
-						<blockquote>
-							<table>
-							<tr>
-								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/layouts/default.vue'>default.vue</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
-							</tr>
-							</table>
-						</blockquote>
-					</details>
-					<details>
-						<summary><b>styles</b></summary>
-						<blockquote>
-							<table>
-							<tr>
-								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/styles/settings.scss'>settings.scss</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
-							</tr>
-							</table>
-						</blockquote>
-					</details>
 					<details>
 						<summary><b>components</b></summary>
 						<blockquote>
@@ -465,12 +303,6 @@
 					<details>
 						<summary><b>pages</b></summary>
 						<blockquote>
-							<table>
-							<tr>
-								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/pages/index.vue'>index.vue</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
-							</tr>
-							</table>
 							<details>
 								<summary><b>manager</b></summary>
 								<blockquote>
@@ -585,47 +417,6 @@
 							</details>
 						</blockquote>
 					</details>
-					<details>
-						<summary><b>plugins</b></summary>
-						<blockquote>
-							<table>
-							<tr>
-								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/plugins/vuetify.js'>vuetify.js</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
-							</tr>
-							<tr>
-								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/plugins/index.js'>index.js</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
-							</tr>
-							</table>
-						</blockquote>
-					</details>
-					<details>
-						<summary><b>router</b></summary>
-						<blockquote>
-							<table>
-							<tr>
-								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/router/index.js'>index.js</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
-							</tr>
-							</table>
-						</blockquote>
-					</details>
-					<details>
-						<summary><b>stores</b></summary>
-						<blockquote>
-							<table>
-							<tr>
-								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/stores/index.js'>index.js</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
-							</tr>
-							<tr>
-								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Frontend/src/stores/auth.js'>auth.js</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
-							</tr>
-							</table>
-						</blockquote>
-					</details>
 				</blockquote>
 			</details>
 		</blockquote>
@@ -635,20 +426,12 @@
 		<blockquote>
 			<table>
 			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/vercel.json'>vercel.json</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
 				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/app.py'>app.py</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
+				<td><code>❯ Entry point of Backend Application</code></td>
 			</tr>
 			<tr>
 				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/config.py'>config.py</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
-			</tr>
-			<tr>
-				<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/requirements.txt'>requirements.txt</a></b></td>
-				<td><code>❯ REPLACE-ME</code></td>
+				<td><code>❯ Configuration file of Backend Application</code></td>
 			</tr>
 			</table>
 			<details>
@@ -660,15 +443,15 @@
 							<table>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/models/wfh_requests.py'>wfh_requests.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ ORM for wfh_requests table</code></td>
 							</tr>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/models/withdrawal_requests.py'>withdrawal_requests.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ ORM for withdrawal_requests table</code></td>
 							</tr>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/models/employees.py'>employees.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ ORM for employees table</code></td>
 							</tr>
 							</table>
 						</blockquote>
@@ -679,15 +462,15 @@
 							<table>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/routes/wfh_requests_routes.py'>wfh_requests_routes.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ Controller for routes pertaining to WFH Requests</code></td>
 							</tr>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/routes/employees_routes.py'>employees_routes.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ Controller for routes pertaining to Employees</code></td>
 							</tr>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/routes/withdrawal_requests_routes.py'>withdrawal_requests_routes.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ Controller for routes pertaining to Withdrawal Requests</code></td>
 							</tr>
 							</table>
 						</blockquote>
@@ -698,7 +481,7 @@
 							<table>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/utils/email_functions.py'>email_functions.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ Functions pertaining to sending Emails</code></td>
 							</tr>
 							</table>
 						</blockquote>
@@ -709,15 +492,15 @@
 							<table>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/services/withdrawal_requests_services.py'>withdrawal_requests_services.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ Services pertaining to Withdrawal Requests</code></td>
 							</tr>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/services/wfh_requests_services.py'>wfh_requests_services.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ Services pertaining to WFH Requests</code></td>
 							</tr>
 							<tr>
 								<td><b><a href='https://github.com/sp0oderman/SPM_G4_Team5/blob/master/Backend/src/services/employees_services.py'>employees_services.py</a></b></td>
-								<td><code>❯ REPLACE-ME</code></td>
+								<td><code>❯ Services pertaining to Employees</code></td>
 							</tr>
 							</table>
 						</blockquote>
@@ -741,52 +524,65 @@ Before getting started with SPM_G4_Team5, ensure your runtime environment meets 
 
 ###  Installation
 
-Install SPM_G4_Team5 using one of the following methods:
-
-**Build from source:**
+Install the Application using the following method:
 
 1. Clone the SPM_G4_Team5 repository:
+
 ```sh
 ❯ git clone https://github.com/sp0oderman/SPM_G4_Team5
 ```
 
-2. Navigate to the project directory:
-```sh
-❯ cd SPM_G4_Team5
-```
-
-3. Install the project dependencies:
-
-
-**Using `npm`** &nbsp; [<img align="center" src="" />]()
+2. Navigate to the <b>Backend</b> of the project directory:
 
 ```sh
-❯ echo 'INSERT-INSTALL-COMMAND-HERE'
+❯ cd SPM_G4_Team5/Backend
 ```
 
-
-**Using `pip`** &nbsp; [<img align="center" src="" />]()
+3. Install the project <b>Backend</b> dependencies:
 
 ```sh
-❯ echo 'INSERT-INSTALL-COMMAND-HERE'
+❯ run 'pip install requirements.txt' in the terminal
 ```
 
+4. Navigate to the <b>Frontend</b> of the project directory:
+
+```sh
+❯ cd SPM_G4_Team5/Frontend
+```
+
+5. Install the project <b>Frontend</b> dependencies:
+
+```sh
+❯ run 'npm install' in the terminal
+```
 
 
 
 ###  Usage
-Run SPM_G4_Team5 using the following command:
-**Using `npm`** &nbsp; [<img align="center" src="" />]()
+Run the Application using the following commands (A separate terminal required for Frontend and Backend):
+
+1. In one terminal, navigate to the <b>Backend</b> of the project directory:
 
 ```sh
-❯ echo 'INSERT-RUN-COMMAND-HERE'
+❯ cd SPM_G4_Team5/Backend
 ```
 
-
-**Using `pip`** &nbsp; [<img align="center" src="" />]()
+2. Run the <b>Backend</b> application:
 
 ```sh
-❯ echo 'INSERT-RUN-COMMAND-HERE'
+❯ run 'python app.py' in the terminal
+```
+
+3. In another terminal, navigate to the <b>Frontend</b> of the project directory:
+
+```sh
+❯ cd SPM_G4_Team5/Frontend
+```
+
+4. Run the <b>Frontend</b> application:
+
+```sh
+❯ run 'npm run prod' in the terminal
 ```
 
 
@@ -794,78 +590,22 @@ Run SPM_G4_Team5 using the following command:
 Run the test suite using the following command:
 **Using `npm`** &nbsp; [<img align="center" src="" />]()
 
-```sh
-❯ echo 'INSERT-TEST-COMMAND-HERE'
-```
-
-
-**Using `pip`** &nbsp; [<img align="center" src="" />]()
+1. Navigate to the <b>Backend</b> of the project directory:
 
 ```sh
-❯ echo 'INSERT-TEST-COMMAND-HERE'
+❯ cd SPM_G4_Team5/Backend
 ```
 
+2. To run <b>unit test</b> suite:
 
----
-##  Project Roadmap
+```sh
+❯ run 'python -m unittest discover -s tests/unit_tests'
+```
 
-- [X] **`Task 1`**: <strike>Implement feature one.</strike>
-- [ ] **`Task 2`**: Implement feature two.
-- [ ] **`Task 3`**: Implement feature three.
+3. To run <b>integration test</b> suite:
 
----
-
-##  Contributing
-
-- **💬 [Join the Discussions](https://github.com/sp0oderman/SPM_G4_Team5/discussions)**: Share your insights, provide feedback, or ask questions.
-- **🐛 [Report Issues](https://github.com/sp0oderman/SPM_G4_Team5/issues)**: Submit bugs found or log feature requests for the `SPM_G4_Team5` project.
-- **💡 [Submit Pull Requests](https://github.com/sp0oderman/SPM_G4_Team5/blob/main/CONTRIBUTING.md)**: Review open PRs, and submit your own PRs.
-
-<details closed>
-<summary>Contributing Guidelines</summary>
-
-1. **Fork the Repository**: Start by forking the project repository to your github account.
-2. **Clone Locally**: Clone the forked repository to your local machine using a git client.
-   ```sh
-   git clone https://github.com/sp0oderman/SPM_G4_Team5
-   ```
-3. **Create a New Branch**: Always work on a new branch, giving it a descriptive name.
-   ```sh
-   git checkout -b new-feature-x
-   ```
-4. **Make Your Changes**: Develop and test your changes locally.
-5. **Commit Your Changes**: Commit with a clear message describing your updates.
-   ```sh
-   git commit -m 'Implemented new feature x.'
-   ```
-6. **Push to github**: Push the changes to your forked repository.
-   ```sh
-   git push origin new-feature-x
-   ```
-7. **Submit a Pull Request**: Create a PR against the original project repository. Clearly describe the changes and their motivations.
-8. **Review**: Once your PR is reviewed and approved, it will be merged into the main branch. Congratulations on your contribution!
-</details>
-
-<details closed>
-<summary>Contributor Graph</summary>
-<br>
-<p align="left">
-   <a href="https://github.com{/sp0oderman/SPM_G4_Team5/}graphs/contributors">
-      <img src="https://contrib.rocks/image?repo=sp0oderman/SPM_G4_Team5">
-   </a>
-</p>
-</details>
-
----
-
-##  License
-
-This project is protected under the [SELECT-A-LICENSE](https://choosealicense.com/licenses) License. For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) file.
-
----
-
-##  Acknowledgments
-
-- List any resources, contributors, inspiration, etc. here.
+```sh
+❯ run 'python -m unittest discover -s tests/integration_tests'
+```
 
 ---
