@@ -16,9 +16,6 @@ EMAIL_ACCOUNT = os.getenv('EMAIL_ACCOUNT')
 EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 
 ########################################################################################################################################################################################################################################
-EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
-
-########################################################################################################################################################################################################################################
 
 # Email notification to Manager of new WFH Request from Employee in team
 def newWFHRequestEmailNotif(reporting_manager, employee, wfh_request):
@@ -31,7 +28,6 @@ def newWFHRequestEmailNotif(reporting_manager, employee, wfh_request):
                 <p>An employee in your team has made a new WFH Request.</p>
                 <p><b><u>WFH Request Details</u></b><br>
                     <b>Employee Name:</b> {employee.staff_fname} {employee.staff_lname}<br>
-                    <b>Employee ID:</b> {employee.staff_id}<br>
                     <b>Employee ID:</b> {employee.staff_id}<br>
                     <b>Request ID:</b> {wfh_request.request_id}<br>
                     <b>Arrangement Type:</b> {wfh_request.arrangement_type}<br>

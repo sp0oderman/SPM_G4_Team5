@@ -35,7 +35,7 @@ class BaseTestCase(TestCase):
             dept="Sales",
             position="Sales Manager",
             country="Singapore",
-            email="manager@example.com",
+            email="jakob.lie.2022@smu.edu.sg",
             reporting_manager=140001,
             role=3
         )
@@ -48,7 +48,7 @@ class BaseTestCase(TestCase):
             dept="Sales",
             position="Account Manager",
             country="Singapore",
-            email="employee@example.com",
+            email="sthauheed.2022@smu.edu.sg",
             reporting_manager=140894,
             role=2
         )
